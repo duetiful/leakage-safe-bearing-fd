@@ -127,5 +127,5 @@ is right but the slide's framing needs correcting), **Not verified** (source not
 - Confirm the primary sources behind the ">90%" figure (Vieira et al. refs [4], [6]); the reference list
   did not load through the tools available here.
 - Confirm the Figure 1 single-run value (0.343) by reading the PDF figure directly.
-- Issues #3 and #4: protocol details above come from the paper; still to cross-check against the
-  `pdm-bench` configs (`config/` scenario files).
+- Issues #3 and #4: cross-checked against the pdm-bench code in
+  [benchmark-protocol.md](benchmark-protocol.md).
