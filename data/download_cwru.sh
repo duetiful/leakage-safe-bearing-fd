@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Download CWRU into data/raw/ using the same Kaggle mirror as the pdm-bench benchmark
 # (javadseraj/cwru-bearing-fault-data-set), so the benchmark's CWRU loader and queries
-# work unchanged. Needs the kaggle CLI (in requirements.txt) and an API token in
-# ~/.kaggle/kaggle.json or KAGGLE_USERNAME / KAGGLE_KEY.
+# work unchanged. Needs the kaggle CLI (in requirements.txt) and Kaggle credentials:
+# a new-style API token (KAGGLE_API_TOKEN or ~/.kaggle/access_token), or a legacy
+# ~/.kaggle/kaggle.json / KAGGLE_USERNAME + KAGGLE_KEY.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,8 +15,10 @@ if [[ -d "$DEST/Datasets/CWRU" ]]; then
   exit 0
 fi
 command -v kaggle >/dev/null || { echo "kaggle CLI not found; pip install -r requirements.txt" >&2; exit 1; }
-if [[ -z "${KAGGLE_USERNAME:-}" || -z "${KAGGLE_KEY:-}" ]] && [[ ! -f "${KAGGLE_CONFIG_DIR:-$HOME/.kaggle}/kaggle.json" ]]; then
-  echo "Kaggle credentials not found (KAGGLE_USERNAME/KAGGLE_KEY or ~/.kaggle/kaggle.json)." >&2
+KDIR="${KAGGLE_CONFIG_DIR:-$HOME/.kaggle}"
+if [[ -z "${KAGGLE_API_TOKEN:-}" && ! -f "$KDIR/access_token" && ! -f "$KDIR/kaggle.json" ]] \
+   && [[ -z "${KAGGLE_USERNAME:-}" || -z "${KAGGLE_KEY:-}" ]]; then
+  echo "Kaggle credentials not found. Set KAGGLE_API_TOKEN, or save the token to $KDIR/access_token." >&2
   exit 1
 fi
 
