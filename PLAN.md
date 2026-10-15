@@ -8,10 +8,13 @@ Build an honest deep learning model for bearing fault diagnosis that generalizes
 (different bearings, loads, operating conditions, datasets) when evaluated under a **leakage-safe**
 protocol, and report clearly where it does and does not beat simple baselines.
 
-**Why (from the presentation):** data leakage has affected 294 papers across 17 fields, and over 90%
-of those involve faulty train/test splitting. In bearing diagnosis, Knap, Jachymczyk & Lalik (PHM
-Society Europe, 2026) built a leakage-safe cross-domain benchmark on CWRU + PU where their deep model
-reached **macro F1 = 0.326**, while plain logistic regression reached **0.355**. That gap is the target.
+**Why (from the presentation, corrected after the Phase 0 check in `docs/literature.md`):** data leakage
+has affected at least 294 papers across 17 fields (Kapoor & Narayanan, *Patterns*, 2023), and reviews of
+bearing fault diagnosis report data-splitting issues in over 90% of papers (as cited by Vieira et al.,
+MSSP 2026; primary source still to confirm). Knap, Jachymczyk & Lalik (PHM Society Europe, 2026) built a
+leakage-safe cross-domain benchmark on CWRU + PU. On its PU Cross-Bearing Instance scenario their best
+deep model reached **macro F1 = 0.326 ± 0.008** (3 seeds), while logistic regression reached **0.355**
+(single run), the only one of six scenarios where the simple model wins. That gap is the target.
 
 ## 2. Research questions
 
@@ -22,7 +25,7 @@ reached **macro F1 = 0.326**, while plain logistic regression reached **0.355**.
 3. **RQ3 (Explain):** Which single change is responsible for any improvement, verified by
    one-change-at-a-time ablations?
 
-**Success criterion:** mean macro F1 over seeds beats 0.355 on the benchmark's cross-domain split,
+**Success criterion:** mean macro F1 over seeds beats 0.355 on the benchmark's PU Cross-Bearing Instance scenario,
 with the gain larger than the seed-to-seed spread. A negative result, honestly reported, is also a
 valid outcome.
 
