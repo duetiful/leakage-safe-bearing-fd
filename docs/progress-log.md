@@ -44,3 +44,14 @@ One dated entry per working session: what was done, results, next step.
 - Milestone M0 reached and tagged `m0`. One open follow-up: the primary source for the ">90%"
   splitting figure (#2).
 - Next: Phase 1, reproduce the 0.355 LR and 0.326 CNN baselines on PU Cross-Bearing Instance.
+
+## 2026-10-15 (Phase 1 start)
+- Done: Added `lsbfd` package with a leakage check over all six scenarios (`lsbfd.splits`,
+  8 tests run on the real file lists), a run script with the paper's exact settings for LR and
+  the 1D CNN (`scripts/phase1_reproduce.sh`), and a results summarizer. pdm-bench is now an
+  editable clone in `third_party/` so its configs are found. Both pipelines ran end to end on
+  synthetic data here; real training runs on Colab.
+- Results: no recording is shared across any split, but CWRU Cross-Load, CWRU Cross-FS and PU
+  Cross-Operating Condition test on bearings already seen in training
+  (results/splits/leakage_report.md).
+- Next: run LR and CNN seeds 41 to 43 on Colab, then write results/reproduction.md.

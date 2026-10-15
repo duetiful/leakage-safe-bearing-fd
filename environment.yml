@@ -11,4 +11,4 @@ dependencies:
   - p7zip        # PU .rar extraction (7z)
   - pip:
       - -r requirements.txt
-# then: pip install --no-deps --ignore-requires-python -r requirements-bench.txt
+# then run: bash setup.sh   (installs pdm-bench and this package)

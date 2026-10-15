@@ -93,3 +93,19 @@ Use pdm-bench as a pinned dependency for loading and splitting, rather than rewr
 reproduction runs on the same code as the paper. Our own code adds the leakage checks (no shared
 recording or bearing across train and test), exports resolved split lists, and reruns both
 baselines over seeds 41, 42, 43.
+
+## 8. Physical-bearing overlap (added in Phase 1)
+
+`python -m lsbfd.splits` resolves every scenario from the file lists and checks two levels
+(report: [results/splits/leakage_report.md](../results/splits/leakage_report.md)):
+
+- **Recording level:** no scenario puts a recording in both train and test. The benchmark's
+  "leakage-safe" claim holds at this level.
+- **Physical-bearing level:** three of the six scenarios test on bearings already seen in
+  training: CWRU Cross-Load (all 16), CWRU Cross-FS (13, assuming CWRU's 12 kHz and 48 kHz
+  drive-end recordings come from the same seeded bearings) and PU Cross-Operating Condition
+  (all 32). These are the scenarios with the highest scores (Cross-Load 1.000). By Vieira et al.'s
+  definition this is bearing-level leakage, so those scores measure robustness to a new load,
+  sampling rate or condition, not generalisation to new bearings. Only Cross-Fault Instance,
+  Cross-Damage Provenance and Cross-Bearing Instance hold out whole bearings, which is one more
+  reason PU Cross-Bearing Instance is our main target.

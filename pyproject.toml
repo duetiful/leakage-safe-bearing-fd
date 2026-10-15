@@ -1,0 +1,12 @@
+[project]
+name = "lsbfd"
+version = "0.1.0"
+description = "Leakage-safe bearing fault diagnosis: reproduction and cross-domain experiments."
+requires-python = ">=3.10"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

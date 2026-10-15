@@ -1,6 +1,6 @@
 # Pinned to the versions in pdm-bench's uv.lock (commit ca52408) so the Phase 1
 # reproduction runs on the same library versions as Knap et al. (2026).
-# Works on Python 3.11 to 3.13. Install with ./setup.sh, which also installs pdm-bench.
+# Works on Python 3.11 to 3.13. Install with `bash setup.sh`, which also installs pdm-bench.
 numpy==2.2.6
 pandas==2.3.3
 scipy==1.15.3

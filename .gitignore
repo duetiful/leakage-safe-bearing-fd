@@ -9,3 +9,5 @@ runs/
 wandb/
 .env
 artifacts/
+third_party/
+*.egg-info/
