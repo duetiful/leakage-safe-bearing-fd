@@ -55,3 +55,5 @@ One dated entry per working session: what was done, results, next step.
   Cross-Operating Condition test on bearings already seen in training
   (results/splits/leakage_report.md).
 - Next: run LR and CNN seeds 41 to 43 on Colab, then write results/reproduction.md.
+- LR on PU Cross-Bearing Instance (Colab): macro-F1 0.388 vs the paper's 0.355; recorded in
+  [results/reproduction.md](../results/reproduction.md). CNN seeds 41 to 43 next.
