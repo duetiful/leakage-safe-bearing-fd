@@ -38,3 +38,9 @@ One dated entry per working session: what was done, results, next step.
 - Results: Confirmed that PU models in the benchmark see two motor currents plus vibration, not
   vibration only. Colab runs Python 3.13, which pdm-bench formally excludes; installing it with
   `--ignore-requires-python` passes all 278 of its tests on 3.13, so `setup.sh` now does that.
+- Committed SHA-256 checksums from the Colab download: `data/checksums/cwru.sha256` (161 files) and
+  `data/checksums/pu.sha256` (2,560 files: all 32 PU bearings × 80 files, no duplicate hashes).
+  Later downloads are verified against these automatically (#5).
+- Milestone M0 reached and tagged `m0`. One open follow-up: the primary source for the ">90%"
+  splitting figure (#2).
+- Next: Phase 1, reproduce the 0.355 LR and 0.326 CNN baselines on PU Cross-Bearing Instance.
