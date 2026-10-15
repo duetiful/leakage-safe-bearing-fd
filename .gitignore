@@ -1,0 +1,9 @@
+data/raw/
+data/processed/
+*.mat
+*.npz
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+runs/
+wandb/
