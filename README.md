@@ -13,11 +13,13 @@ generalizes across domains under a leakage-safe evaluation protocol on CWRU and 
 
 ```bash
 python3.11 -m venv .venv && . .venv/bin/activate
-pip install -r requirements.txt          # or: conda env create -f environment.yml
+bash setup.sh                            # pinned libraries + benchmark code
 cp .env.example .env                     # set WORKSPACE to <repo>/data/raw
-data/download_cwru.sh                    # needs a Kaggle API token
+data/download_cwru.sh                    # needs KAGGLE_API_TOKEN set
 data/download_pu.sh                      # needs unrar or 7z; aria2c optional
 ```
+
+On Google Colab, run the same commands with a leading `!` (e.g. `!bash setup.sh`).
 
 Raw data lands in `data/raw/` (git-ignored). Each download script records SHA-256 checksums in
 `data/checksums/` on first run and verifies them afterwards.

@@ -1,5 +1,5 @@
 # Conda environment for the project. Equivalent pip-only setup:
-#   python3.11 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt
+#   python3.11 -m venv .venv && . .venv/bin/activate && bash setup.sh
 # On a CUDA machine, install the matching torch build first if pip picks the wrong one.
 name: lsbfd
 channels:
@@ -11,3 +11,4 @@ dependencies:
   - p7zip        # PU .rar extraction (7z)
   - pip:
       - -r requirements.txt
+# then: pip install --no-deps --ignore-requires-python -r requirements-bench.txt

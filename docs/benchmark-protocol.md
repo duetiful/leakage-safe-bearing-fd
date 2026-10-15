@@ -65,11 +65,13 @@ Macro-F1 over the target classes (paper §2.4); the ML hyperparameter search als
 These matter for an honest reproduction. Each is read from the code; items marked *to confirm* need
 the downloaded data.
 
-1. **PU input may not be vibration-only (*to confirm*).** The paper says it uses the HostService
+1. **PU input is not vibration-only (confirmed 2026-10-15).** The paper says it uses the HostService
    vibration signal. The PU loader keeps **every channel** in the HostService raster and no PU task
-   config filters channels. In the PU `.mat` files the 64 kHz raster also holds the two motor phase
-   currents, so the models likely see 3 channels (2 currents + vibration). CWRU configs do filter to
-   the drive-end sensor.
+   config filters channels. Reading a downloaded PU file shows the 64 kHz HostService raster holds
+   `phase_current_1`, `phase_current_2` and `vibration_1` (256,823 samples each), so every PU model,
+   ML and DL, sees **two motor currents plus vibration**. CWRU configs do filter to the drive-end
+   sensor. Phase 1 should reproduce as released (3 channels), then rerun vibration-only, because
+   current signals carry their own fault information and change what "vibration-based" means.
 2. **No source validation split for DL.** No task config sets `val_query`, so DL training runs a fixed
    50 epochs with the LR scheduler stepping on training loss, and the final epoch is evaluated. That
    avoids test-based early stopping. However, the "winner" model and profile for each scenario

@@ -1,0 +1,4 @@
+# Benchmark code (Knap, Jachymczyk & Lalik, PHME 2026), pinned to the audited commit.
+# Installed by setup.sh with --no-deps --ignore-requires-python: pdm-bench declares
+# Python <3.13, but its 278 tests pass on 3.13 (Colab's version) with requirements.txt.
+pdm-bench @ git+https://github.com/1Sensor/pdm-bench@ca524087219fd47bb7fb51ce63563c05b34cd6ee

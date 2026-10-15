@@ -31,3 +31,10 @@ One dated entry per working session: what was done, results, next step.
 - Not yet tested: the dataset downloads themselves (the hosts were unreachable from the cloud
   machine); the scripts' logic and checksum handling were tested offline.
 - Next: download both datasets, commit checksums, tag `m0`, then start Phase 1.
+
+## 2026-10-15 (Phase 0 data)
+- Done: Downloaded both datasets on Colab with the repo's scripts: CWRU 161 `.mat` files, PU 2,560
+  (32 bearings × 4 conditions × 20 measurements, the full set) (#5).
+- Results: Confirmed that PU models in the benchmark see two motor currents plus vibration, not
+  vibration only. Colab runs Python 3.13, which pdm-bench formally excludes; installing it with
+  `--ignore-requires-python` passes all 278 of its tests on 3.13, so `setup.sh` now does that.

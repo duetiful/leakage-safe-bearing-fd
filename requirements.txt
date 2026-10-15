@@ -1,6 +1,6 @@
 # Pinned to the versions in pdm-bench's uv.lock (commit ca52408) so the Phase 1
 # reproduction runs on the same library versions as Knap et al. (2026).
-# Python 3.11 (pdm-bench supports 3.10 to 3.12).
+# Works on Python 3.11 to 3.13. Install with ./setup.sh, which also installs pdm-bench.
 numpy==2.2.6
 pandas==2.3.3
 scipy==1.15.3
@@ -13,5 +13,3 @@ matplotlib==3.10.8
 pyyaml==6.0.3
 pytest==9.1.1
 kaggle
-# Benchmark code (Knap, Jachymczyk & Lalik, PHME 2026), pinned to the audited commit.
-pdm-bench @ git+https://github.com/1Sensor/pdm-bench@ca524087219fd47bb7fb51ce63563c05b34cd6ee
