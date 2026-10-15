@@ -17,3 +17,17 @@ One dated entry per working session: what was done, results, next step.
   confirmed published in MSSP 2026. Benchmark code is public (1Sensor/pdm-bench, MIT).
 - Updated PLAN.md motivation and success criterion to match the sources.
 - Next: #3 and #4 (cross-check protocol against the pdm-bench configs), #5 (environment and download scripts).
+
+## 2026-10-15 (Phase 0 continued)
+- Done: Audited the benchmark code (1Sensor/pdm-bench, commit ca52408) against the paper and wrote
+  [benchmark-protocol.md](benchmark-protocol.md) (#3, #4). Added `requirements.txt` pinned to the
+  benchmark's own library versions, `environment.yml`, `.env.example`, and CWRU / PU download and
+  checksum scripts (#5).
+- Results: code is public and split definitions are config queries, so splits are exactly
+  reproducible. The benchmark's 278 tests pass in the pinned Python 3.11 environment. Found in the
+  code: PU models likely take motor currents as well as vibration (to confirm on download), DL gets
+  no input normalization, and the per-scenario "winner" selection has no visible source-only
+  validation step.
+- Not yet tested: the dataset downloads themselves (the hosts were unreachable from the cloud
+  machine); the scripts' logic and checksum handling were tested offline.
+- Next: download both datasets, commit checksums, tag `m0`, then start Phase 1.
