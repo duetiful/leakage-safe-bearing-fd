@@ -106,6 +106,20 @@ environment.yml
 | Domain adaptation doesn't beat 0.355 | Report as a negative result with ablations explaining why |
 | Compute limits | Small 1D CNN backbones; CWRU and PU are small enough for a single GPU or Colab |
 
-## 8. Open items to confirm
-- Semester deadlines for each milestone (dates to fill in).
+## 8. Timeline
+
+Target finish: **October 31, 2026**. Hard deadline: **November 23, 2026** (the gap is buffer).
+
+| Milestone | Phase | Due |
+|---|---|---|
+| M0 | Literature verification and setup | Oct 17 |
+| M1 | Reproduce baselines | Oct 22 |
+| M2 | Domain adaptation | Oct 26 |
+| M3 | Ablations and explanation | Oct 29 |
+| M4 | Honest overview and final report | Oct 31 |
+
+If a phase slips, later phases shift into the buffer before Nov 23; M4 (the write-up) is never
+cut, because an honest report of partial results beats unreported experiments.
+
+## 9. Open items to confirm
 - Whether the professor wants a specific report format or submission schedule.
