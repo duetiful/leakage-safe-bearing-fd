@@ -57,3 +57,9 @@ One dated entry per working session: what was done, results, next step.
 - Next: run LR and CNN seeds 41 to 43 on Colab, then write results/reproduction.md.
 - LR on PU Cross-Bearing Instance (Colab): macro-F1 0.388 vs the paper's 0.355; recorded in
   [results/reproduction.md](../results/reproduction.md). CNN seeds 41 to 43 next.
+
+## 2026-10-15 (Phase 1 baselines)
+- Done: CNN seeds 41 to 43 on Colab. CNN 0.315 ± 0.032 vs paper 0.326 ± 0.008 (reproduced within
+  spread); LR 0.388 vs 0.355 (not exact). LR beats every CNN seed. Details in
+  [results/reproduction.md](../results/reproduction.md).
+- Next: vibration-only rerun and leaky-split contrast to complete M1.
