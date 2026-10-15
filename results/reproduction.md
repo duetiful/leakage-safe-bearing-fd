@@ -8,7 +8,7 @@ K001, KA30, KI21, KB23. Splits pass `lsbfd.splits` (no shared recording or beari
 | Model | Paper | Ours | Gap | Runs |
 |---|---|---|---|---|
 | Logistic regression | 0.355 (single run, Table 3) | **0.388** (balanced acc. 0.391) | +0.033 | 1 (2026-10-15) |
-| 1D CNN | 0.326 ± 0.008 (seeds 41–43, Table 4) | pending | | |
+| 1D CNN | 0.326 ± 0.008 (seeds 41–43, Table 4) | seed 41: **0.290** (balanced acc. 0.283); 42, 43 pending | −0.036 (seed 41) | 1 of 3 |
 
 ## Notes
 
@@ -18,5 +18,8 @@ K001, KA30, KI21, KB23. Splits pass `lsbfd.splits` (no shared recording or beari
   during the search (scikit-learn printed many ConvergenceWarnings), which makes the chosen
   hyperparameters sensitive to numerical details. A gap of this size from one deterministic
   run means the paper's single-run 0.355 carries an unknown error bar.
-- The direction of the paper's finding holds so far: LR is well above the paper's CNN number.
-  Whether it beats our CNN depends on the pending runs.
+- **CNN seed 41 is below the paper's range.** 0.290 is about 4.5 of the paper's standard
+  deviations under its mean. GPU nondeterminism and library versions can move a single seed,
+  so the comparison waits for seeds 42 and 43.
+- **The paper's direction holds, and the gap is wider here:** LR 0.388 vs CNN 0.290 (seed 41),
+  a 0.098 gap against the paper's 0.029.
