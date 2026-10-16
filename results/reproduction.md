@@ -35,5 +35,34 @@ CNN per seed (macro-F1 / balanced accuracy): 41: 0.290 / 0.283, 42: 0.351 / 0.31
   environment.
 - Use at least 3 seeds (5 if affordable) and report mean ± std; a claimed gain must exceed the
   CNN's 0.032 spread.
-- Still to run for M1: the vibration-only rerun of both baselines, and the deliberately leaky
-  random split for contrast.
+
+## Vibration-only rerun and leaky-split contrast (2026-10-16)
+
+Same settings as above. "Vibration-only" keeps only `vibration_1` from the PU HostService raster
+(`lsbfd.run_variant`). "Leaky" trains on every bearing and tests on measurements 1, 6, 11, 16 of
+each bearing, so test recordings are new but every test bearing was seen in training.
+
+| Variant | LR macro-F1 (single run) | CNN macro-F1 (seeds) |
+|---|---|---|
+| As released (currents + vibration) | 0.388 | 0.315 ± 0.032 (41–43) |
+| **Vibration-only** | **0.508** (balanced acc. 0.535) | **0.436 ± 0.023** (41–43: 0.440, 0.457, 0.411) |
+| Leaky (seen bearings, unseen recordings) | 0.841 | 0.999 (seed 41 only) |
+
+5. **Dropping the motor currents helps both models a lot**: +0.120 for LR and +0.121 for the
+   CNN. The currents appear to carry bearing-specific (or rig-specific) cues that do not transfer
+   to new bearings; this is an inference from the scores, not tested directly. The paper's
+   0.355 / 0.326 therefore understate what its own models reach on the vibration input it
+   describes.
+6. **LR still beats the CNN on vibration** (0.508 vs 0.436, above every CNN seed), so the paper's
+   headline survives the input change.
+7. **Bearing leakage inflates scores massively.** With the same models, letting test bearings
+   appear in training lifts LR from 0.388 to 0.841 and the CNN from 0.315 to 0.999. On seen
+   bearings the CNN wins; on unseen bearings it loses. A leaky protocol would have reversed the
+   paper's conclusion.
+
+## Implications for Phase 2 (updated)
+
+- Phase 2 uses **vibration-only input**, matching the paper's description and scoring higher.
+- The bar to beat is vibration-only LR, **0.508**; the deep baseline is the vibration-only CNN,
+  0.436 ± 0.023. A claimed gain must exceed about 0.03 (seed spread).
+- LR remains a single run; rerunning it with the BayesSearch seed varied would give it a spread.

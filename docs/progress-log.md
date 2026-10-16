@@ -70,3 +70,7 @@ One dated entry per working session: what was done, results, next step.
   and a bearing-leaky split (measurements 1, 6, 11, 16 of every bearing as test). Both smoke-tested
   end to end on synthetic data.
 - Next: run them on Colab and record the results.
+- Done: Ran both variants on Colab. Vibration-only: LR 0.508, CNN 0.436 ± 0.023 (both +0.12 over
+  3-channel). Leaky split: LR 0.841, CNN 0.999. Phase 2 bar is now vibration-only LR, 0.508.
+  M1 complete; details in [results/reproduction.md](../results/reproduction.md).
+- Next: user creates the `m1` release; Phase 2 (domain adaptation) on vibration-only input.
