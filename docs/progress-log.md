@@ -63,3 +63,10 @@ One dated entry per working session: what was done, results, next step.
   spread); LR 0.388 vs 0.355 (not exact). LR beats every CNN seed. Details in
   [results/reproduction.md](../results/reproduction.md).
 - Next: vibration-only rerun and leaky-split contrast to complete M1.
+
+## 2026-10-16
+- Done: Added the two remaining M1 variants to `scripts/phase1_reproduce.sh`: vibration-only
+  (`lsbfd.run_variant` drops the motor currents from the PU loader; 18 instead of 54 LR features)
+  and a bearing-leaky split (measurements 1, 6, 11, 16 of every bearing as test). Both smoke-tested
+  end to end on synthetic data.
+- Next: run them on Colab and record the results.

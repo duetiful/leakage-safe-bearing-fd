@@ -20,15 +20,18 @@ def collect(base: Path) -> pd.DataFrame:
         cfg_path = run_dir / "pipeline_config.json"
         cfg = json.loads(cfg_path.read_text()) if cfg_path.exists() else {}
         metrics = json.loads(summary.read_text())["metrics"]
+        rel = run_dir.relative_to(base)
+        variant = rel.parts[0] if rel.parts[0] in {"vib", "leaky"} else "as_released"
         rows.append(
             {
+                "variant": variant,
                 "model": summary.name.removesuffix("_test_summary.json"),
                 "task": cfg.get("run", {}).get("name", ""),
                 "seed": cfg.get("train", {}).get("random_state", ""),
                 "macro_f1": metrics.get("macro_f1"),
                 "balanced_accuracy": metrics.get("balanced_accuracy"),
                 "accuracy": metrics.get("accuracy"),
-                "run_dir": str(run_dir.relative_to(base)),
+                "run_dir": str(rel),
             }
         )
     return pd.DataFrame(rows)
@@ -43,8 +46,8 @@ def main(argv: list[str]) -> int:
     df.to_csv(base / "summary.csv", index=False)
     with pd.option_context("display.width", 200, "display.max_colwidth", 60):
         print(df.drop(columns="run_dir").to_string(index=False))
-        agg = df.groupby("model")["macro_f1"].agg(["count", "mean", "std"]).round(4)
-        print("\nmacro-F1 by model:\n" + agg.to_string())
+        agg = df.groupby(["variant", "model"])["macro_f1"].agg(["count", "mean", "std"]).round(4)
+        print("\nmacro-F1 by variant and model:\n" + agg.to_string())
     print(f"\nWrote {base / 'summary.csv'}")
     return 0
 

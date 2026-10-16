@@ -27,6 +27,8 @@ On Google Colab, run the same commands with a leading `!` (e.g. `!bash setup.sh`
 python -m lsbfd.splits                         # leakage report for all six scenarios
 bash scripts/phase1_reproduce.sh lr            # logistic regression, PU Cross-Bearing Instance
 bash scripts/phase1_reproduce.sh cnn 41        # 1D CNN, one seed (repeat for 42, 43); needs a GPU
+bash scripts/phase1_reproduce.sh vib-lr        # same, vibration channel only (also vib-cnn <seed>)
+bash scripts/phase1_reproduce.sh leaky-lr      # same, bearing-leaky split (also leaky-cnn <seed>)
 python -m lsbfd.summarize runs/phase1          # macro-F1 table, mean ± std
 ```
 
