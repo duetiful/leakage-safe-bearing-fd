@@ -7,11 +7,12 @@
 #                                             #    validation bearings (seed 41, 20 epochs)
 #   bash scripts/phase2_adapt.sh select       # 2. print the setting each method keeps
 #   bash scripts/phase2_adapt.sh test 41      # 3. chosen settings on the test bearings,
-#                                             #    one seed (repeat for 42, 43); DG first
+#                                             #    one seed, 20 epochs (repeat for 42, 43)
 #   bash scripts/phase2_adapt.sh uda 41       # 4. optional: the UDA variant, same way
 #
 # OUT (default runs/phase2) can point at Google Drive so results survive a Colab reset.
-# VAL_EPOCHS (default 20) and EXTRA (extra lsbfd.adapt args, smoke tests only) are optional.
+# VAL_EPOCHS and TEST_EPOCHS (default 20 each; Phase 1 used 50, too slow for Colab at
+# ~50 min per 20-epoch run) and EXTRA (extra lsbfd.adapt args, smoke tests only) are optional.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -46,14 +47,14 @@ case "${1:-}" in
     for fam in erm dann-dg simclr; do
       args="$(chosen "$fam")"
       [[ -n "$args" ]] || { echo "no validation run for $fam; run the val stage first" >&2; exit 1; }
-      adapt --stage test --seed "$seed" $args
+      adapt --stage test --seed "$seed" --epochs "${TEST_EPOCHS:-20}" $args
     done
     python -m lsbfd.summarize "$OUT" ;;
   uda)
     seed="${2:?seed required, e.g. 41}"
     args="$(chosen dann-uda)"
     [[ -n "$args" ]] || { echo "no validation run for dann-uda; run the val stage first" >&2; exit 1; }
-    adapt --stage test --seed "$seed" $args
+    adapt --stage test --seed "$seed" --epochs "${TEST_EPOCHS:-20}" $args
     python -m lsbfd.summarize "$OUT" ;;
   *) echo "usage: $0 val | select | test <seed> | uda <seed>" >&2; exit 1 ;;
 esac

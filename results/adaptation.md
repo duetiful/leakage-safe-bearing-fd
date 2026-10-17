@@ -21,8 +21,10 @@ CNN's seed spread).
   recording or window is shared (checked by `lsbfd.splits` and asserted in `lsbfd.adapt`).
 - **Backbone and recipe:** pdm-bench's `CNN1D`, unchanged, with its Phase 1 recipe (AdamW 1e-3,
   weight decay 1e-4, plateau scheduler on train loss, label smoothing 0.05, batch 64,
-  50 epochs, final epoch scored, no early stopping). Phase 2 runs use mixed precision on the
-  GPU for speed, so **ERM in the same trainer is the control**, not the pdm-bench number.
+  final epoch scored, no early stopping), but **20 epochs instead of 50** and mixed precision
+  on the GPU: one 20-epoch run takes about 50 minutes on a Colab T4, so 50 epochs × 3 seeds
+  would exceed 30 GPU hours. **ERM in the same trainer is therefore the control**, not the
+  pdm-bench number.
 - **Methods:**
 
   | Run | What it adds | Setting |

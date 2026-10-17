@@ -91,3 +91,6 @@ One dated entry per working session: what was done, results, next step.
   here"). pdm-bench's own loader skips unreadable files, so the Phase 1 baselines never saw it;
   `lsbfd.adapt` now skips them the same way, prints their names, and records the number of
   recordings loaded in each run's config.
+- Validation stage started on Colab: one file skipped (`N15_M01_F10_KA08_2.mat`, 2,239 of 2,240
+  loaded); ERM on the validation bearings scored macro-F1 0.294 (20 epochs, ~50 min on a T4).
+  Test runs cut to 20 epochs (from 50) to fit Colab; ERM in the same trainer stays the control.
