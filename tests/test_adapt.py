@@ -69,3 +69,25 @@ def test_augment_keeps_shape_and_changes_signal():
     x = torch.randn(4, 1, adapt.WINDOW)
     v = adapt.augment(x)
     assert v.shape == x.shape and not torch.allclose(v, x)
+
+
+def test_unreadable_files_are_skipped_like_pdm_bench(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from pdm_bench.loaders import pu
+
+    d = tmp_path / adapt.PU_DIR / "KA01"
+    d.mkdir(parents=True)
+    for m in (1, 2):
+        (d / f"N15_M07_F10_KA01_{m}.mat").touch()
+
+    def fake(f):
+        if f.stem.endswith("_2"):
+            raise TypeError("Expecting matrix here")
+        rec = SimpleNamespace(data=np.zeros((1, 9000), np.float32), channels=[adapt.CHANNEL],
+                              rid=f.stem, meta={"raster": "HostService", "bearing_code": "KA01"})
+        return [rec]
+
+    monkeypatch.setattr(pu, "_load_pu_file", fake)
+    sig = adapt.load_signals(tmp_path, ["KA01"], cache=None)
+    assert sig.rids == ["N15_M07_F10_KA01_1"]

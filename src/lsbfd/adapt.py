@@ -122,7 +122,11 @@ def load_signals(root: Path, bearings: list[str], cache: Path | None) -> Signals
         return Signals(z["data"], z["offsets"], z["lengths"], list(z["bearings"]), list(z["rids"]))
     parts, bear, rids = [], [], []
     for i, f in enumerate(files):
-        recs = [r for r in _load_pu_file(f) if r.meta["raster"] == "HostService"]
+        try:
+            recs = [r for r in _load_pu_file(f) if r.meta["raster"] == "HostService"]
+        except Exception as e:  # pdm-bench's load_pu_dataset skips unreadable files too
+            print(f"skipped unreadable file {f.name}: {e}", flush=True)
+            continue
         (r,) = recs
         parts.append(r.data[r.channels.index(CHANNEL)].astype(np.float32))
         bear.append(r.meta["bearing_code"])
@@ -132,6 +136,7 @@ def load_signals(root: Path, bearings: list[str], cache: Path | None) -> Signals
     lengths = np.array([len(p) for p in parts], dtype=np.int64)
     offsets = np.concatenate([[0], np.cumsum(lengths)[:-1]]).astype(np.int64)
     sig = Signals(np.concatenate(parts), offsets, lengths, bear, rids)
+    print(f"loaded {len(rids)} of {len(files)} files", flush=True)
     if key:
         key.parent.mkdir(parents=True, exist_ok=True)
         np.savez(key, data=sig.data, offsets=offsets, lengths=lengths,
@@ -414,7 +419,7 @@ def run(a) -> dict:
             "split": {"train_bearings": train_b, "scored_bearings": scored_b,
                       "window": WINDOW, "train_overlap": TRAIN_OVERLAP,
                       "test_overlap": TEST_OVERLAP, "channel": CHANNEL},
-            "n_train_windows": len(src), "n_scored_windows": len(tgt_eval), "classes": classes}
+            "n_recordings": len(sig.rids), "n_train_windows": len(src), "n_scored_windows": len(tgt_eval), "classes": classes}
     (run_dir / "pipeline_config.json").write_text(json.dumps(cfg, indent=2))
     history = []
 

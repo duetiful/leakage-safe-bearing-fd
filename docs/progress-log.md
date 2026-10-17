@@ -87,3 +87,7 @@ One dated entry per working session: what was done, results, next step.
   smoke-tested end to end here on synthetic signals.
 - Next: run the validation grid and the three test seeds on Colab, then fill in
   results/adaptation.md (M2, #6).
+- Fix: the first Colab run stopped on a PU file that scipy cannot read ("Expecting matrix
+  here"). pdm-bench's own loader skips unreadable files, so the Phase 1 baselines never saw it;
+  `lsbfd.adapt` now skips them the same way, prints their names, and records the number of
+  recordings loaded in each run's config.
