@@ -89,5 +89,14 @@ def test_unreadable_files_are_skipped_like_pdm_bench(tmp_path, monkeypatch):
         return [rec]
 
     monkeypatch.setattr(pu, "_load_pu_file", fake)
-    sig = adapt.load_signals(tmp_path, ["KA01"], cache=None)
-    assert sig.rids == ["N15_M07_F10_KA01_1"]
+    sig = adapt.load_signals(tmp_path, ["KA01"], cache=tmp_path / "cache")
+    assert sig.rids == ["N15_M07_F10_KA01_1"] and sig.bearings == ["KA01"]
+    # Second load comes from the per-bearing cache, with the raw files gone.
+    for f in d.iterdir():
+        f.unlink()
+    again = adapt.load_signals(tmp_path, ["KA01"], cache=tmp_path / "cache")
+    assert again.rids == sig.rids and (again.data == sig.data).all()
+
+
+def test_manifest_lists_all_32_bearings():
+    assert adapt.manifest_bearings() == PU_BEARINGS

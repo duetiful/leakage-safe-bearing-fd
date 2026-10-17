@@ -94,3 +94,9 @@ One dated entry per working session: what was done, results, next step.
 - Validation stage started on Colab: one file skipped (`N15_M01_F10_KA08_2.mat`, 2,239 of 2,240
   loaded); ERM on the validation bearings scored macro-F1 0.294 (20 epochs, ~50 min on a T4).
   Test runs cut to 20 epochs (from 50) to fit Colab; ERM in the same trainer stays the control.
+- Colab compute units ran out after 2 of 8 validation runs (ERM 0.294, DANN within-class
+  λ=0.1 0.308 on the validation bearings). To finish the full plan on Kaggle's free GPU, the
+  vibration cache is now one file per bearing, and `scripts/prepare_pu_cache.sh` builds it one
+  bearing at a time (download, checksum, cache, delete), so the raw dataset never has to fit
+  on disk. Runs read only the cache, and the leakage check falls back to the committed
+  manifest when raw files are absent.

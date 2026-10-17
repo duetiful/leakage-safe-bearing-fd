@@ -11,6 +11,8 @@
 #   bash scripts/phase2_adapt.sh uda 41       # 4. optional: the UDA variant, same way
 #
 # OUT (default runs/phase2) can point at Google Drive so results survive a Colab reset.
+# CACHE (default data/processed) holds the per-bearing vibration cache; on Kaggle, build it
+# first with scripts/prepare_pu_cache.sh and the raw .mat files are not needed.
 # VAL_EPOCHS and TEST_EPOCHS (default 20 each; Phase 1 used 50, too slow for Colab at
 # ~50 min per 20-epoch run) and EXTRA (extra lsbfd.adapt args, smoke tests only) are optional.
 set -euo pipefail
@@ -20,14 +22,26 @@ export WORKSPACE="${WORKSPACE:-$ROOT/data/raw}"
 OUT="$(realpath -m "${OUT:-$ROOT/runs/phase2}")"
 cd "$ROOT"
 
-adapt() { python -m lsbfd.adapt --out "$OUT" "$@" ${EXTRA:-}; }
+CACHE="$(realpath -m "${CACHE:-$ROOT/data/processed}")"
+
+adapt() { python -m lsbfd.adapt --out "$OUT" --cache "$CACHE" "$@" ${EXTRA:-}; }
 
 chosen() {  # chosen lsbfd.adapt args for one family, from the validation runs
   python -m lsbfd.select "$OUT" | awk -F'\t' -v f="$1" '$1 == f {print $4}'
 }
 
 if [[ "${1:-}" != select && "${EXTRA:-}" != *--synthetic* ]]; then
-  python -m lsbfd.splits pu_cross_bearing_instance   # refuses to continue if a recording leaks
+  # Refuses to continue if a recording leaks. Only file names are read, so without the raw
+  # data (cache-only machines) it checks the committed download manifest instead.
+  if [[ -d "$WORKSPACE/datasets/paderborn-university-bearing-dataset" ]]; then
+    python -m lsbfd.splits pu_cross_bearing_instance
+  else
+    fake="$(mktemp -d)"
+    while read -r _ path; do mkdir -p "$fake/$(dirname "${path#data/raw/}")"
+      touch "$fake/${path#data/raw/}"; done < data/checksums/pu.sha256
+    WORKSPACE="$fake" python -m lsbfd.splits pu_cross_bearing_instance
+    rm -rf "$fake"
+  fi
 fi
 case "${1:-}" in
   val)

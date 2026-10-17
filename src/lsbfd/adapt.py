@@ -32,7 +32,6 @@ Outputs go to <out>/<stage>/<tag>/seed<seed>/ in the same layout as pdm-bench ru
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import subprocess
@@ -106,22 +105,27 @@ class Signals:
         return np.concatenate(starts), np.concatenate(rec)
 
 
-def load_signals(root: Path, bearings: list[str], cache: Path | None) -> Signals:
-    """Load the HostService vibration channel of every PU file of the given bearings."""
+def manifest_bearings() -> list[str]:
+    """All PU bearing codes, from the committed download manifest (no data needed)."""
+    lines = (ROOT / "data/checksums/pu.sha256").read_text().splitlines()
+    return sorted({line.split()[1].split("/")[-2] for line in lines})
+
+
+def cache_bearing(root: Path, bearing: str, cache: Path) -> Path:
+    """Write one bearing's HostService vibration recordings to <cache>/pu_vibration_1_<B>.npz.
+
+    Unreadable files are skipped, as pdm-bench's load_pu_dataset does."""
     from pdm_bench.loaders.pu import _load_pu_file
 
-    files = sorted(f for f in (root / PU_DIR).rglob("*.mat") if f.parent.name in bearings)
+    key = cache / f"pu_{CHANNEL}_{bearing}.npz"
+    if key.exists():
+        return key
+    files = sorted((root / PU_DIR / bearing).glob("*.mat"))
     if not files:
-        raise FileNotFoundError(f"No PU .mat files for {bearings} under {root / PU_DIR}")
-    key = cache / f"pu_{CHANNEL}_{'-'.join(sorted(bearings))}.npz" if cache else None
-    if key and len(key.name) > 120:
-        digest = hashlib.sha1(",".join(sorted(bearings)).encode()).hexdigest()[:12]
-        key = cache / f"pu_{CHANNEL}_{len(bearings)}bearings_{digest}.npz"
-    if key and key.exists():
-        z = np.load(key, allow_pickle=False)
-        return Signals(z["data"], z["offsets"], z["lengths"], list(z["bearings"]), list(z["rids"]))
-    parts, bear, rids = [], [], []
-    for i, f in enumerate(files):
+        raise FileNotFoundError(f"No cache {key.name} and no .mat files under "
+                                f"{root / PU_DIR / bearing}")
+    parts, rids = [], []
+    for f in files:
         try:
             recs = [r for r in _load_pu_file(f) if r.meta["raster"] == "HostService"]
         except Exception as e:  # pdm-bench's load_pu_dataset skips unreadable files too
@@ -129,19 +133,30 @@ def load_signals(root: Path, bearings: list[str], cache: Path | None) -> Signals
             continue
         (r,) = recs
         parts.append(r.data[r.channels.index(CHANNEL)].astype(np.float32))
-        bear.append(r.meta["bearing_code"])
         rids.append(r.rid)
-        if (i + 1) % 200 == 0:
-            print(f"loaded {i + 1}/{len(files)} files", flush=True)
-    lengths = np.array([len(p) for p in parts], dtype=np.int64)
+    key.parent.mkdir(parents=True, exist_ok=True)
+    tmp = key.with_suffix(".tmp.npz")
+    np.savez(tmp, data=np.concatenate(parts), lengths=np.array([len(x) for x in parts]),
+             rids=np.array(rids), n_files=len(files))
+    tmp.rename(key)  # never leave a half-written cache behind
+    return key
+
+
+def load_signals(root: Path, bearings: list[str], cache: Path) -> Signals:
+    """HostService vibration of every recording of the given bearings, via the per-bearing
+    cache (built from the .mat files on first use)."""
+    data, lengths, bear, rids, n_files = [], [], [], [], 0
+    for b in sorted(bearings):
+        z = np.load(cache_bearing(root, b, cache), allow_pickle=False)
+        data.append(z["data"])
+        lengths.append(z["lengths"].astype(np.int64))
+        rids += list(z["rids"])
+        bear += [b] * len(z["lengths"])
+        n_files += int(z["n_files"])
+    lengths = np.concatenate(lengths)
     offsets = np.concatenate([[0], np.cumsum(lengths)[:-1]]).astype(np.int64)
-    sig = Signals(np.concatenate(parts), offsets, lengths, bear, rids)
-    print(f"loaded {len(rids)} of {len(files)} files", flush=True)
-    if key:
-        key.parent.mkdir(parents=True, exist_ok=True)
-        np.savez(key, data=sig.data, offsets=offsets, lengths=lengths,
-                 bearings=np.array(bear), rids=np.array(rids))
-    return sig
+    print(f"loaded {len(rids)} of {n_files} files", flush=True)
+    return Signals(np.concatenate(data), offsets, lengths, bear, rids)
 
 
 def synthetic_signals(bearings: list[str], n_rec: int = 4, n: int = 40_000,
@@ -387,18 +402,13 @@ def run(a) -> dict:
     amp = a.amp and dev.type == "cuda"
     torch.backends.cudnn.benchmark = True
 
-    if a.synthetic:
-        all_bearings = sorted({l.split()[1].split("/")[-2]
-                               for l in (ROOT / "data/checksums/pu.sha256").read_text().splitlines()})
-    else:
-        root = Path(a.workspace)
-        all_bearings = sorted(p.name for p in (root / PU_DIR).iterdir() if p.is_dir()
-                              and any(p.glob("*.mat")))
+    all_bearings = manifest_bearings()
+    root = Path(a.workspace)
     train_b, scored_b = stage_bearings(a.stage, all_bearings)
     if a.synthetic:
         sig = synthetic_signals(train_b + scored_b, seed=0)
     else:
-        sig = load_signals(root, train_b + scored_b, Path(a.cache) if a.cache else None)
+        sig = load_signals(root, train_b + scored_b, Path(a.cache))
     data = torch.from_numpy(sig.data).to(dev)
     classes = sorted({label_of(b) for b in train_b})  # same order as pdm-bench label_to_id
     domains = train_b if a.method == "dann" and a.domain != "target" else []

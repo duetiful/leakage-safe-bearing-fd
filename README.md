@@ -42,6 +42,14 @@ bash scripts/phase2_adapt.sh uda 41            # optional: unsupervised DA varia
 python -m lsbfd.summarize runs/phase2          # macro-F1 table, mean ± std
 ```
 
+On a machine with little disk (e.g. Kaggle), build the vibration-only cache one bearing at a
+time instead of downloading all of PU, then point the runs at it:
+
+```bash
+CACHE=/kaggle/working/cache bash scripts/prepare_pu_cache.sh   # ~2.6 GB, checksums verified
+CACHE=/kaggle/working/cache OUT=/kaggle/working/phase2 bash scripts/phase2_adapt.sh val
+```
+
 Protocol and results: [results/adaptation.md](results/adaptation.md).
 
 Raw data lands in `data/raw/` (git-ignored). Each download script records SHA-256 checksums in
