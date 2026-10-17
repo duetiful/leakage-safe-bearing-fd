@@ -74,3 +74,16 @@ One dated entry per working session: what was done, results, next step.
   3-channel). Leaky split: LR 0.841, CNN 0.999. Phase 2 bar is now vibration-only LR, 0.508.
   M1 complete; details in [results/reproduction.md](../results/reproduction.md).
 - Next: user creates the `m1` release; Phase 2 (domain adaptation) on vibration-only input.
+
+## 2026-10-17 (Phase 2 start)
+- Done: Added `lsbfd.adapt`, a trainer on pdm-bench's unchanged CNN1D and vibration-only PU
+  input with four methods: ERM (control), DANN with a source-bearing adversary (plain and
+  within-class), SimCLR pretraining plus fine-tuning, and classic source-vs-target DANN (UDA,
+  reported separately). Hyperparameters are chosen on four held-out *source* bearings
+  (K006, KA22, KB27, KI18) by a fixed rule (`lsbfd.select`); the test bearings are never
+  loaded in that stage. `scripts/phase2_adapt.sh` runs the stages and resumes after a
+  disconnect. Protocol written down before any result in
+  [results/adaptation.md](../results/adaptation.md). 6 new tests; all 15 pass. Every stage
+  smoke-tested end to end here on synthetic signals.
+- Next: run the validation grid and the three test seeds on Colab, then fill in
+  results/adaptation.md (M2, #6).

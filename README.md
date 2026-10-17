@@ -32,6 +32,18 @@ bash scripts/phase1_reproduce.sh leaky-lr      # same, bearing-leaky split (also
 python -m lsbfd.summarize runs/phase1          # macro-F1 table, mean ± std
 ```
 
+## Phase 2: domain adaptation (vibration only)
+
+```bash
+bash scripts/phase2_adapt.sh val               # source-only validation grid (seed 41); needs a GPU
+bash scripts/phase2_adapt.sh select            # settings chosen by the fixed rule
+bash scripts/phase2_adapt.sh test 41           # ERM, DANN, SimCLR on the test bearings (repeat 42, 43)
+bash scripts/phase2_adapt.sh uda 41            # optional: unsupervised DA variant
+python -m lsbfd.summarize runs/phase2          # macro-F1 table, mean ± std
+```
+
+Protocol and results: [results/adaptation.md](results/adaptation.md).
+
 Raw data lands in `data/raw/` (git-ignored). Each download script records SHA-256 checksums in
 `data/checksums/` on first run and verifies them afterwards.
 
