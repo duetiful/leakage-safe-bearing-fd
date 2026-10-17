@@ -100,3 +100,6 @@ One dated entry per working session: what was done, results, next step.
   bearing at a time (download, checksum, cache, delete), so the raw dataset never has to fit
   on disk. Runs read only the cache, and the leakage check falls back to the committed
   manifest when raw files are absent.
+- Validation grid complete (runs 3–8 on Kaggle). Chosen: DANN within-class λ=1 (val 0.527 vs
+  ERM 0.294), SimCLR (0.283), UDA DANN λ=0.1 (0.309). Table in
+  [results/adaptation.md](../results/adaptation.md). Next: test seeds 41–43.

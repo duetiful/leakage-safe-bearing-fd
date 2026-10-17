@@ -1,6 +1,6 @@
 # Phase 2: Domain adaptation on PU Cross-Bearing Instance (vibration only)
 
-Status: **code ready, runs pending** (Colab). This file fixes the protocol before any result
+Status: **validation grid done; test runs pending.** This file fixes the protocol before any result
 is seen, so the selection cannot be tuned to the test bearings afterwards.
 
 ## Bars to beat (from [reproduction.md](reproduction.md), vibration-only)
@@ -48,8 +48,31 @@ CNN's seed spread).
 
 ## Results
 
-Pending. Tables to fill: validation grid; test macro-F1 (mean ± std over seeds) and balanced
-accuracy per method against both baselines; per-class F1 and per-bearing accuracy.
+### Validation grid (source-only hold-out K006, KA22, KB27, KI18; seed 41, 20 epochs)
 
-Reproduce: `bash scripts/phase2_adapt.sh val`, then `test 41`, `test 42`, `test 43`
-(optional `uda <seed>`), then `python -m lsbfd.summarize runs/phase2`.
+Runs 1–2 on Colab (T4), runs 3–8 on Kaggle, same code and cache contents. One PU file,
+`N15_M01_F10_KA08_2.mat`, cannot be read and is skipped, as pdm-bench skips it (2,239 of 2,240
+source files).
+
+| Run | Setting | Macro-F1 | Balanced acc. |
+|---|---|---|---|
+| erm | control | 0.294 | 0.358 |
+| dann-bearing λ=0.1 | DG | 0.354 | 0.401 |
+| dann-bearing λ=1 | DG | 0.337 | 0.356 |
+| dann-bearing_in_class λ=0.1 | DG | 0.308 | 0.367 |
+| **dann-bearing_in_class λ=1** | DG | **0.527** | **0.595** |
+| simclr (10 pretraining epochs) | DG | 0.283 | 0.329 |
+| dann-target λ=0.1 | UDA | 0.309 | 0.373 |
+| dann-target λ=1 | UDA | 0.200 | 0.280 |
+
+Chosen by the fixed rule (`lsbfd.select`): **erm**, **dann-bearing_in_class λ=1** (DG-DANN),
+**simclr** (only setting), **dann-target λ=0.1** (UDA).
+
+Reading, before any test result: every DG-DANN setting beats ERM on the validation bearings,
+and the within-class adversary at λ=1 does so by 0.23. These are single-seed scores on four
+bearings (one per class), so one bearing flipping changes macro-F1 by a lot; the test seeds
+decide. SimCLR pretraining does not help here, and source-vs-target DANN at λ=1 hurts.
+
+### Test bearings
+
+Pending: `test 41`, `test 42`, `test 43` (then `uda 41–43`).
