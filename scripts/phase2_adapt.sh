@@ -33,7 +33,8 @@ chosen() {  # chosen lsbfd.adapt args for one family, from the validation runs
 if [[ "${1:-}" != select && "${EXTRA:-}" != *--synthetic* ]]; then
   # Refuses to continue if a recording leaks. Only file names are read, so without the raw
   # data (cache-only machines) it checks the committed download manifest instead.
-  if [[ -d "$WORKSPACE/datasets/paderborn-university-bearing-dataset" ]]; then
+  if find "$WORKSPACE/datasets/paderborn-university-bearing-dataset" -name '*.mat' -print -quit \
+       2>/dev/null | grep -q .; then
     python -m lsbfd.splits pu_cross_bearing_instance
   else
     fake="$(mktemp -d)"
