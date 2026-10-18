@@ -103,3 +103,8 @@ One dated entry per working session: what was done, results, next step.
 - Validation grid complete (runs 3–8 on Kaggle). Chosen: DANN within-class λ=1 (val 0.527 vs
   ERM 0.294), SimCLR (0.283), UDA DANN λ=0.1 (0.309). Table in
   [results/adaptation.md](../results/adaptation.md). Next: test seeds 41–43.
+
+## 2026-10-18
+- Test seed 41 (Kaggle): ERM 0.435, DANN within-class λ=1 0.333, SimCLR 0.378. ERM matches the
+  Phase 1 CNN; neither adaptation method beats ERM, and none approaches LR (0.508). The
+  validation winner did not hold on the test bearings. Next: seeds 42 and 43.

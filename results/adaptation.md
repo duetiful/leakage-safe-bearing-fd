@@ -75,4 +75,17 @@ decide. SimCLR pretraining does not help here, and source-vs-target DANN at λ=1
 
 ### Test bearings
 
-Pending: `test 41`, `test 42`, `test 43` (then `uda 41–43`).
+Macro-F1 on K001, KA30, KB23, KI21 (20 epochs; Kaggle GPU). Seeds 42 and 43 pending.
+
+| Run | Seed 41 | Mean ± std | vs. LR 0.508 |
+|---|---|---|---|
+| erm | 0.435 | pending | −0.073 |
+| dann-bearing_in_class λ=1 | 0.333 | pending | −0.175 |
+| simclr | 0.378 | pending | −0.130 |
+
+Seed 41 reading (to be confirmed by seeds 42 and 43):
+- ERM at 20 epochs scores 0.435, matching the Phase 1 pdm-bench CNN (0.436 ± 0.023), so this
+  trainer reproduces the baseline and fewer epochs did not weaken it.
+- The validation ranking did **not** transfer: DANN within-class λ=1 led validation by 0.23
+  but trails ERM by 0.10 on the test bearings, and SimCLR trails ERM by 0.06. Nothing is near
+  LR's 0.508.
