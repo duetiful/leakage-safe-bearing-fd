@@ -1,6 +1,6 @@
 # Phase 2: Domain adaptation on PU Cross-Bearing Instance (vibration only)
 
-Status: **validation grid done; test runs pending.** This file fixes the protocol before any result
+Status: **DG results complete (3 seeds); optional UDA test runs pending.** This file fixes the protocol before any result
 is seen, so the selection cannot be tuned to the test bearings afterwards.
 
 ## Bars to beat (from [reproduction.md](reproduction.md), vibration-only)
@@ -75,17 +75,43 @@ decide. SimCLR pretraining does not help here, and source-vs-target DANN at λ=1
 
 ### Test bearings
 
-Macro-F1 on K001, KA30, KB23, KI21 (20 epochs; Kaggle GPU). Seeds 42 and 43 pending.
+Macro-F1 on K001, KA30, KB23, KI21, seeds 41–43, 20 epochs (Kaggle GPU). Std is the sample
+standard deviation over the three seeds.
 
-| Run | Seed 41 | Mean ± std | vs. LR 0.508 |
-|---|---|---|---|
-| erm | 0.435 | pending | −0.073 |
-| dann-bearing_in_class λ=1 | 0.333 | pending | −0.175 |
-| simclr | 0.378 | pending | −0.130 |
+| Method | Setting | Macro-F1 (mean ± std) | vs. ERM | vs. LR 0.508 |
+|---|---|---|---|---|
+| Logistic regression (Phase 1) | — | 0.508 (single run) | | |
+| CNN, pdm-bench (Phase 1, 50 epochs) | — | 0.436 ± 0.023 | | |
+| **ERM** (this trainer, control) | — | **0.404 ± 0.027** | — | −0.104 |
+| SimCLR pretraining + fine-tuning | DG | 0.408 ± 0.034 | +0.004 | −0.100 |
+| DANN, within-class bearing adversary, λ=1 | DG | 0.348 ± 0.013 | −0.056 | −0.160 |
 
-Seed 41 reading (to be confirmed by seeds 42 and 43):
-- ERM at 20 epochs scores 0.435, matching the Phase 1 pdm-bench CNN (0.436 ± 0.023), so this
-  trainer reproduces the baseline and fewer epochs did not weaken it.
-- The validation ranking did **not** transfer: DANN within-class λ=1 led validation by 0.23
-  but trails ERM by 0.10 on the test bearings, and SimCLR trails ERM by 0.06. Nothing is near
-  LR's 0.508.
+## Findings (RQ2)
+
+1. **No adaptation method beats the logistic-regression bar.** The best deep model (SimCLR,
+   0.408) is 0.100 below LR's 0.508, far outside the ~0.03 seed spread. RQ2's answer under this
+   protocol is **no**: a negative result.
+2. **SimCLR pretraining changes nothing measurable.** +0.004 over ERM, well inside either
+   method's seed spread (0.027–0.034).
+3. **DANN hurts.** The within-class bearing adversary is 0.056 below ERM, about twice the seed
+   spread, and below ERM on the mean of all three seeds. Removing bearing identity from the
+   features did not make them transfer better to new bearings; it removed useful signal.
+4. **Source-only model selection failed.** The DANN setting that led validation by 0.23
+   (0.527 vs 0.294) was the worst on the test bearings. With one held-out bearing per class,
+   validation measures how four particular bearings behave, not how new bearings will.
+   Hyperparameter selection for cross-bearing generalization is itself an open problem, and a
+   reason to distrust any single-split "best model" claim.
+5. **ERM sits slightly below the Phase 1 CNN** (0.404 vs 0.436, about one standard deviation of
+   either). Differences: 20 instead of 50 epochs and mixed precision. Seed 41 matched (0.435);
+   seeds 42–43 were lower. This does not change any conclusion above, since every comparison is
+   against ERM from the same trainer, and even the Phase 1 CNN is 0.07 below LR.
+
+## Limitations
+
+- Three seeds; the selection stage used one seed.
+- 20 epochs to fit free GPU time (see the progress log); 50 epochs were not tried for the
+  adaptation methods.
+- One scenario (PU Cross-Bearing Instance) with one test bearing per class, so per-class F1 is
+  effectively per-bearing.
+- One file (`N15_M01_F10_KA08_2.mat`) is unreadable and skipped, as in pdm-bench.
+- The UDA variant (source-vs-target DANN, λ=0.1) has not been run on the test bearings yet.

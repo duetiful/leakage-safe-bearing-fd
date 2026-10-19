@@ -108,3 +108,9 @@ One dated entry per working session: what was done, results, next step.
 - Test seed 41 (Kaggle): ERM 0.435, DANN within-class λ=1 0.333, SimCLR 0.378. ERM matches the
   Phase 1 CNN; neither adaptation method beats ERM, and none approaches LR (0.508). The
   validation winner did not hold on the test bearings. Next: seeds 42 and 43.
+
+## 2026-10-19
+- Test seeds 42–43 done. Means over seeds 41–43: ERM 0.404 ± 0.027, SimCLR 0.408 ± 0.034,
+  DANN within-class λ=1 0.348 ± 0.013. Nothing approaches LR (0.508); SimCLR equals ERM; DANN
+  is worse; the validation-chosen setting did not transfer. Written up in
+  [results/adaptation.md](../results/adaptation.md). Next: optional UDA seeds, then M2 tag.
