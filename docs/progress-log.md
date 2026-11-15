@@ -123,3 +123,11 @@ One dated entry per working session: what was done, results, next step.
   rotated held-out folds (one real-damage bearing per class) so a win cannot rest on the four
   benchmark bearings alone. Protocol and judging rule fixed before any result in
   [results/novel.md](../results/novel.md). Smoke-tested on synthetic signals; PU runs on Kaggle.
+
+## 2026-11-16
+- Phase 3 run in the cloud (PU downloaded and checksum-verified there). Boosted trees on
+  envelope-order features: 0.528 ± 0.100 macro-F1 over 10 held-out bearing sets vs 0.355 for
+  LR on the generic features (9 of 10 folds better, p = 0.004); the features alone account for
+  +0.147. On the benchmark's 4 bearings: 0.490, just below pdm-bench LR 0.508. Envelope CNN
+  0.318; AdaBN per bearing lifts it to 0.393. Written up in
+  [results/novel.md](../results/novel.md).
