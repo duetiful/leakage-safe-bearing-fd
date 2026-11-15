@@ -114,3 +114,12 @@ One dated entry per working session: what was done, results, next step.
   DANN within-class λ=1 0.348 ± 0.013. Nothing approaches LR (0.508); SimCLR equals ERM; DANN
   is worse; the validation-chosen setting did not transfer. Written up in
   [results/adaptation.md](../results/adaptation.md). Next: optional UDA seeds, then M2 tag.
+
+## 2026-11-15
+- Phase 3 started, because Phase 2's objective changes (DANN, SimCLR) did not beat LR.
+  Implemented methods borrowed from neighbouring problems: physics-informed envelope-order
+  features at the 6203 fault frequencies (LR and boosted trees), an envelope-spectrum CNN, and
+  test-time BatchNorm adaptation (AdaBN) for both the envelope CNN and the raw CNN. Added
+  rotated held-out folds (one real-damage bearing per class) so a win cannot rest on the four
+  benchmark bearings alone. Protocol and judging rule fixed before any result in
+  [results/novel.md](../results/novel.md). Smoke-tested on synthetic signals; PU runs on Kaggle.
