@@ -35,6 +35,32 @@ def load(out: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+CNN_NAMES = {"pred": "env-CNN (DG)", "adabn_pooled": "env-CNN + AdaBN pooled (TTA)",
+             "adabn_per_bearing": "env-CNN + AdaBN per bearing (TTA)"}
+
+
+def load_recording_level(out: Path) -> pd.DataFrame:
+    """Macro-F1 when each 4 s recording is diagnosed by majority vote of its windows."""
+    from sklearn.metrics import f1_score
+
+    from lsbfd.novel import vote
+
+    rows = []
+    for kind in ("ml", "cnn"):
+        for p in sorted((out / kind).glob("fold*/*.npz")):
+            z = np.load(p, allow_pickle=False)
+            r = json.loads(p.with_suffix(".json").read_text())
+            truth = vote(z["true"], z["rid"])
+            for key in (["pred"] if kind == "ml" else list(CNN_NAMES)):
+                v = vote(z[key], z["rid"])
+                name = f"{r['model']} / {r['feature_set']}" if kind == "ml" else CNN_NAMES[key]
+                rows.append({"fold": r["fold"], "method": name, "seed": r["seed"],
+                             "macro_f1": f1_score([truth[k] for k in v], list(v.values()),
+                                                  average="macro", labels=[0, 1, 2, 3],
+                                                  zero_division=0)})
+    return pd.DataFrame(rows)
+
+
 def _ms(x: pd.Series) -> str:
     return f"{x.mean():.3f}" if len(x) == 1 else f"{x.mean():.3f} ± {x.std(ddof=1):.3f}"
 
@@ -55,12 +81,29 @@ def report(out: Path) -> str:
         lines.append(f"| {method} | {len(g)} | {_ms(g.macro_f1)} | {_ms(g.bal_acc)} | "
                      + " | ".join(f"{pb.get(b, float('nan')):.2f}"
                                   for b in ("K001", "KA30", "KB23", "KI21")) + " |")
-    # rotated folds: one value per fold (seeds averaged), paired against the reference
+    lines += fold_table(df, "All folds, window level (benchmark split + rotated hold-outs; "
+                        "one value per fold, seeds averaged)")
+    rec = load_recording_level(out)
+    if not rec.empty:
+        lines += ["", "## Recording level (secondary analysis, added after the fold-0 results)", "",
+                  "Each 4-second recording is diagnosed by majority vote over its windows; "
+                  "macro-F1 over recordings. Same models and predictions as above.", "",
+                  "| Method | Fold 0 macro-F1 |", "|---|---|"]
+        for method, g in rec[rec.fold == 0].groupby("method", sort=False):
+            lines.append(f"| {method} | {_ms(g.macro_f1)} |")
+        lines += fold_table(rec, "Recording level, all folds")
+    held = df.drop_duplicates("fold").sort_values("fold")[["fold", "held_out"]]
+    lines += ["", "Held-out bearings per fold: "
+              + "; ".join(f"{int(f)}: {h}" for f, h in held.itertuples(index=False))]
+    return "\n".join(lines) + "\n"
+
+
+def fold_table(df: pd.DataFrame, title: str) -> list[str]:
+    lines = []
     per_fold = df.groupby(["method", "fold"]).macro_f1.mean().unstack("fold")
     n_folds = per_fold.notna().sum(axis=1)
     if n_folds.max() > 1:
-        lines += ["", f"## All folds (benchmark split + rotated hold-outs; one value per fold, "
-                  "seeds averaged)", "",
+        lines += ["", f"## {title}", "",
                   f"Paired against `{REF}` on the same folds. p is a two-sided Wilcoxon "
                   "signed-rank test over folds.", "",
                   "| Method | Folds | Macro-F1 mean ± std | Min | Δ vs ref (mean) | Folds better | p |",
@@ -81,7 +124,4 @@ def report(out: Path) -> str:
             else:
                 cells += ["—", "—", "—"]
             lines.append("| " + " | ".join(cells) + " |")
-        held = df.drop_duplicates("fold").sort_values("fold")[["fold", "held_out"]]
-        lines += ["", "Held-out bearings per fold: "
-                  + "; ".join(f"{int(f)}: {h}" for f, h in held.itertuples(index=False))]
-    return "\n".join(lines) + "\n"
+    return lines

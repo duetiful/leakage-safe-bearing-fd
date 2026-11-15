@@ -118,6 +118,22 @@ def metrics(true: np.ndarray, pred: np.ndarray, bearing: np.ndarray) -> dict:
     }
 
 
+def save_preds(path: Path, pred: np.ndarray, bank: "Bank", te: np.ndarray, **more) -> None:
+    """Window predictions next to the run's json, for the recording-level analysis."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    np.savez(path.with_suffix(".npz"), pred=pred.astype(np.int8), true=bank.y[te].astype(np.int8),
+             rid=bank.rid[te], bearing=bank.bearing[te],
+             **{k: v.astype(np.int8) for k, v in more.items()})
+
+
+def vote(pred: np.ndarray, rid: np.ndarray) -> dict[str, int]:
+    """Majority class of the window predictions of each recording (ties: lowest class id)."""
+    out = {}
+    for r in np.unique(rid):
+        out[str(r)] = int(np.bincount(pred[rid == r], minlength=len(CLASSES)).argmax())
+    return out
+
+
 def save(path: Path, obj: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(obj, indent=2))
@@ -182,13 +198,14 @@ def cmd_ml(a) -> None:
         for fs in FEATURE_SETS:
             for model in ("lr", "hgb"):
                 path = Path(a.out) / "ml" / f"fold{k}" / f"{model}_{fs}.json"
-                if path.exists() and not a.force:
+                if path.exists() and path.with_suffix(".npz").exists() and not a.force:
                     continue
                 t0 = time.time()
                 X = bank.X(fs)
                 pred, info = fit_predict(model, X[tr], bank.y[tr], bank.bearing[tr], X[te],
                                          a.seed)
                 m = metrics(bank.y[te], pred, bank.bearing[te])
+                save_preds(path, pred, bank, te)
                 save(path, {"fold": k, "held_out": held, "feature_set": fs, "model": model,
                             "seed": a.seed, "metrics": m, "selection": info,
                             "n_train": int(len(tr)), "n_test": int(len(te)),
@@ -311,6 +328,8 @@ def cmd_cnn(a) -> None:
             ib = te_t[torch.from_numpy(sel).to(dev)]
             pred[sel] = _predict(_adabn(model, X, ib), X, ib)
         res["adabn_per_bearing"] = metrics(yt, pred, bt)
+        save_preds(path, _predict(model, X, te_t), bank, te, adabn_per_bearing=pred,
+                   adabn_pooled=_predict(_adabn(model, X, te_t), X, te_t))
         save(path, {"fold": k, "held_out": held, "seed": a.seed, "epochs": a.epochs,
                     "metrics": res, "history": hist, "n_train": int(len(tr)),
                     "n_test": int(len(te)), "git_sha": git_sha(), "device": str(dev),

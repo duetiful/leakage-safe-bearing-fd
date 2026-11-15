@@ -19,7 +19,8 @@ for url in $(data/download_pu.sh --list); do
   mkdir -p "$DEST"
   curl -fsSL --retry 3 -o "$DEST/$b.rar" "$url"
   if command -v unrar >/dev/null; then unrar x -o+ -inul "$DEST/$b.rar" "$DEST/"
-  else 7z x -y "-o$DEST" "$DEST/$b.rar" >/dev/null; fi
+  elif command -v 7z >/dev/null; then 7z x -y "-o$DEST" "$DEST/$b.rar" >/dev/null
+  else unar -q -f -D -o "$DEST" "$DEST/$b.rar"; fi
   rm "$DEST/$b.rar"
   grep "/$b/" data/checksums/pu.sha256 | sha256sum --quiet -c -
   python -c "from pathlib import Path; from lsbfd.adapt import cache_bearing; \
