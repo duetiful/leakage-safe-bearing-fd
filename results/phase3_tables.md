@@ -7,6 +7,8 @@
 | Logistic regression, pdm-bench (Phase 1) | | 0.508 (single run) | | | | | |
 | 1D CNN, pdm-bench (Phase 1, 50 epochs) | | 0.436 ± 0.023 | | | | | |
 | ERM CNN, Phase 2 trainer (20 epochs) | | 0.404 ± 0.027 | | | | | |
+| hgb-cv / generic | 1 | 0.327 | 0.387 | 0.98 | 0.00 | 0.01 | 0.56 |
+| hgb-cv / phys | 1 | 0.467 | 0.471 | 1.00 | 0.29 | 0.25 | 0.34 |
 | hgb / generic+phys | 1 | 0.371 | 0.425 | 1.00 | 0.00 | 0.11 | 0.59 |
 | hgb / generic | 1 | 0.336 | 0.409 | 0.98 | 0.00 | 0.01 | 0.65 |
 | hgb / phys | 1 | 0.490 | 0.503 | 1.00 | 0.21 | 0.24 | 0.57 |
@@ -26,6 +28,8 @@ Paired against `lr / generic` on the same folds. p is a two-sided Wilcoxon signe
 | hgb / generic | 10 | 0.381 ± 0.093 | 0.246 | +0.026 | 5 of 10 | 0.625 |
 | hgb / generic+phys | 10 | 0.500 ± 0.112 | 0.371 | +0.145 | 8 of 10 | 0.020 |
 | hgb / phys | 10 | 0.528 ± 0.100 | 0.356 | +0.174 | 9 of 10 | 0.004 |
+| hgb-cv / generic | 10 | 0.382 ± 0.095 | 0.259 | +0.028 | 5 of 10 | 0.695 |
+| hgb-cv / phys | 10 | 0.524 ± 0.100 | 0.346 | +0.170 | 9 of 10 | 0.004 |
 | lr / generic | 10 | 0.355 ± 0.101 | 0.134 | — | — | — |
 | lr / generic+phys | 10 | 0.442 ± 0.108 | 0.323 | +0.088 | 6 of 10 | 0.084 |
 | lr / phys | 10 | 0.448 ± 0.098 | 0.324 | +0.093 | 8 of 10 | 0.027 |
@@ -36,6 +40,8 @@ Each 4-second recording is diagnosed by majority vote over its windows; macro-F1
 
 | Method | Fold 0 macro-F1 |
 |---|---|
+| hgb-cv / generic | 0.342 |
+| hgb-cv / phys | 0.448 |
 | hgb / generic+phys | 0.398 |
 | hgb / generic | 0.338 |
 | hgb / phys | 0.427 |
@@ -55,6 +61,8 @@ Paired against `lr / generic` on the same folds. p is a two-sided Wilcoxon signe
 | hgb / generic | 10 | 0.369 ± 0.111 | 0.167 | +0.024 | 5 of 10 | 0.770 |
 | hgb / generic+phys | 10 | 0.540 ± 0.139 | 0.381 | +0.195 | 9 of 10 | 0.014 |
 | hgb / phys | 10 | 0.532 ± 0.139 | 0.369 | +0.186 | 8 of 10 | 0.037 |
+| hgb-cv / generic | 10 | 0.366 ± 0.108 | 0.183 | +0.021 | 5 of 10 | 0.770 |
+| hgb-cv / phys | 10 | 0.541 ± 0.119 | 0.368 | +0.196 | 9 of 10 | 0.004 |
 | lr / generic | 10 | 0.345 ± 0.114 | 0.107 | — | — | — |
 | lr / generic+phys | 10 | 0.445 ± 0.126 | 0.304 | +0.099 | 8 of 10 | 0.064 |
 | lr / phys | 10 | 0.478 ± 0.113 | 0.303 | +0.133 | 9 of 10 | 0.014 |

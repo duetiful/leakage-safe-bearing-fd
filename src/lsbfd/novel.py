@@ -188,6 +188,26 @@ def fit_predict(model: str, Xtr, ytr, gtr, Xte, seed: int) -> tuple[np.ndarray, 
                                            l2_regularization=1.0, class_weight="balanced",
                                            early_stopping=False, random_state=seed)
         return m.fit(Xtr, ytr).predict(Xte), {}
+    if model == "hgb-cv":
+        # Phase 3b (added after the 10-fold results): trees with settings chosen by the same
+        # leave-bearings-out CV inside the training bearings (every 2nd window for speed).
+        import itertools
+
+        def make(leaves, l2, iters):
+            return HistGradientBoostingClassifier(
+                max_iter=iters, learning_rate=0.1, max_leaf_nodes=leaves, l2_regularization=l2,
+                class_weight="balanced", early_stopping=False, random_state=seed)
+        sub = np.arange(0, len(ytr), 2)
+        scores = {}
+        for cfg in itertools.product((7, 15, 31), (0.0, 1.0, 10.0), (100, 300)):
+            fs = []
+            for tr, va in GroupKFold(n_splits=4).split(Xtr[sub], ytr[sub], gtr[sub]):
+                m = make(*cfg).fit(Xtr[sub][tr], ytr[sub][tr])
+                fs.append(f1_score(ytr[sub][va], m.predict(Xtr[sub][va]), average="macro"))
+            scores[cfg] = float(np.mean(fs))
+        best = max(scores, key=lambda k: (scores[k], -k[0], k[1], -k[2]))  # ties: simpler
+        return make(*best).fit(Xtr, ytr).predict(Xte), {
+            "leaves_l2_iters": list(best), "cv_macro_f1": {str(k): v for k, v in scores.items()}}
     raise ValueError(model)
 
 
@@ -195,8 +215,8 @@ def cmd_ml(a) -> None:
     bank = Bank(Path(a.env), manifest_bearings())
     for k, held in enumerate(folds(a.folds)):
         tr, te = bank.split(held, train_step=TEST_STEP)  # LR baseline trains at 50 % overlap
-        for fs in FEATURE_SETS:
-            for model in ("lr", "hgb"):
+        for fs in a.feature_sets.split(","):
+            for model in a.models.split(","):
                 path = Path(a.out) / "ml" / f"fold{k}" / f"{model}_{fs}.json"
                 if path.exists() and path.with_suffix(".npz").exists() and not a.force:
                     continue
@@ -360,6 +380,8 @@ def parse(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--fold", type=int, default=0)
     p.add_argument("--all-folds", action="store_true")
     p.add_argument("--seed", type=int, default=41)
+    p.add_argument("--feature-sets", default=",".join(FEATURE_SETS))
+    p.add_argument("--models", default="lr,hgb", help="comma list of lr, hgb, hgb-cv")
     p.add_argument("--epochs", type=int, default=15)
     p.add_argument("--batch", type=int, default=256)
     p.add_argument("--workers", type=int, default=4)

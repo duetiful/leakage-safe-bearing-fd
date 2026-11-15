@@ -131,3 +131,6 @@ One dated entry per working session: what was done, results, next step.
   +0.147. On the benchmark's 4 bearings: 0.490, just below pdm-bench LR 0.508. Envelope CNN
   0.318; AdaBN per bearing lifts it to 0.393. Written up in
   [results/novel.md](../results/novel.md).
+- Phase 3b: boosted trees with settings chosen by leave-bearings-out CV inside the training
+  bearings: 0.524 ± 0.100 (vs 0.528 fixed), so tuning adds nothing and the envelope-feature
+  gain (+0.142 vs tuned generic, p = 0.010) is robust to the settings.

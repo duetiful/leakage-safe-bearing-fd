@@ -125,6 +125,23 @@ Per-class F1 averaged over folds (healthy / inner ring / multiple / outer ring):
    spread, all 3 seeds), pooled AdaBN only +0.013. It uses unlabeled test data, so it is
    test-time adaptation, not DG, and it still stays below the feature models.
 
+### Follow-up: tuned trees (Phase 3b, added after the results above)
+
+To check whether the trees' fixed settings were lucky or leaving gains on the table, a
+variant (`hgb-cv`) chooses max leaves {7, 15, 31}, L2 {0, 1, 10} and iterations {100, 300}
+by the same leave-bearings-out CV *inside the training bearings* of each fold.
+
+| Method | 10-fold macro-F1 | Fold 0 |
+|---|---|---|
+| Boosted trees, envelope features, fixed settings | 0.528 ± 0.100 | 0.490 |
+| Boosted trees, envelope features, CV-tuned | 0.524 ± 0.100 | 0.467 |
+| Boosted trees, generic features, CV-tuned | 0.382 ± 0.095 | 0.327 |
+
+Tuning changes nothing (−0.004, 3 of 10 folds better, p = 0.38), and the envelope-vs-generic
+gap holds under tuning (+0.142, 8 of 10 folds, p = 0.010). The CV mostly picked small, heavily
+regularized trees. The result does not depend on a lucky hyperparameter choice, and tuning is
+not a route to beating 0.508 on fold 0.
+
 ## Limitations
 
 - Feature models are deterministic, so they have no seed spread; the fold-to-fold spread
