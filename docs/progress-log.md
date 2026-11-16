@@ -134,3 +134,9 @@ One dated entry per working session: what was done, results, next step.
 - Phase 3b: boosted trees with settings chosen by leave-bearings-out CV inside the training
   bearings: 0.524 ± 0.100 (vs 0.528 fixed), so tuning adds nothing and the envelope-feature
   gain (+0.142 vs tuned generic, p = 0.010) is robust to the settings.
+- Phase 4 (exploratory, after a data audit): found a non-bearing spike train (100 Hz at
+  1500 rpm, 52.5 Hz at 900 rpm) in most healthy and artificial-damage bearings, and confirmed
+  from Lessmeier et al. (2016) that KB23/KB24 are inner-ring dominant. Training on healthy +
+  real-damage bearings only, with despiked envelope features: 0.590 on the benchmark split
+  (above pdm-bench LR 0.508) and 0.570 ± 0.091 over 10 folds. 3-class labels: 0.756. See
+  [results/explore.md](../results/explore.md).

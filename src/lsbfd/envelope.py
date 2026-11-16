@@ -148,8 +148,22 @@ def envelope_features(x: np.ndarray, rpm: float) -> tuple[np.ndarray, np.ndarray
     return phys.astype(np.float32), np.stack(out, axis=1).astype(np.float16)
 
 
-def cache_envelope(vib_cache: Path, bearing: str, out: Path, batch: int = 512) -> Path:
-    """Compute and store every window's features for one bearing (skips if present)."""
+def despike(x: np.ndarray, k: float) -> np.ndarray:
+    """Clip each window at its median +/- k robust standard deviations (MAD / 0.6745).
+
+    PU recordings carry large impulsive spikes that are not bearing-fault impacts (a spike
+    train at 100 Hz at 1500 rpm and 52.5 Hz at 900 rpm, in most healthy and artificial-damage
+    bearings; see results/explore.md). Clipping removes their amplitude while keeping the
+    low-level modulation that real fault signatures produce."""
+    med = np.median(x, axis=1, keepdims=True)
+    sig = np.median(np.abs(x - med), axis=1, keepdims=True) / 0.6745
+    return np.clip(x, med - k * sig, med + k * sig)
+
+
+def cache_envelope(vib_cache: Path, bearing: str, out: Path, batch: int = 512,
+                   clip: float | None = None, keep_spec: bool = True) -> Path:
+    """Compute and store every window's features for one bearing (skips if present).
+    `clip` despikes each window first (see `despike`)."""
     key = out / f"env_{bearing}.npz"
     if key.exists():
         return key
@@ -165,10 +179,12 @@ def cache_envelope(vib_cache: Path, bearing: str, out: Path, batch: int = 512) -
         for j in range(0, len(starts), batch):
             s = starts[j:j + batch]
             xw = data[off + s[:, None] + np.arange(WINDOW)[None, :]].astype(np.float64)
+            if clip:
+                xw = despike(xw, clip)
             p, sp = envelope_features(xw, rpm)
             gen.append(generic_features(xw).astype(np.float32))
             phys.append(p)
-            spec.append(sp)
+            spec.append(sp if keep_spec else sp[:, :, :1])
         rec.append(np.full(len(starts), i, dtype=np.int32))
         start.append(starts)
     out.mkdir(parents=True, exist_ok=True)
