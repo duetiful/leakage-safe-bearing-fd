@@ -74,3 +74,77 @@ One dated entry per working session: what was done, results, next step.
   3-channel). Leaky split: LR 0.841, CNN 0.999. Phase 2 bar is now vibration-only LR, 0.508.
   M1 complete; details in [results/reproduction.md](../results/reproduction.md).
 - Next: user creates the `m1` release; Phase 2 (domain adaptation) on vibration-only input.
+
+## 2026-10-17 (Phase 2 start)
+- Done: Added `lsbfd.adapt`, a trainer on pdm-bench's unchanged CNN1D and vibration-only PU
+  input with four methods: ERM (control), DANN with a source-bearing adversary (plain and
+  within-class), SimCLR pretraining plus fine-tuning, and classic source-vs-target DANN (UDA,
+  reported separately). Hyperparameters are chosen on four held-out *source* bearings
+  (K006, KA22, KB27, KI18) by a fixed rule (`lsbfd.select`); the test bearings are never
+  loaded in that stage. `scripts/phase2_adapt.sh` runs the stages and resumes after a
+  disconnect. Protocol written down before any result in
+  [results/adaptation.md](../results/adaptation.md). 6 new tests; all 15 pass. Every stage
+  smoke-tested end to end here on synthetic signals.
+- Next: run the validation grid and the three test seeds on Colab, then fill in
+  results/adaptation.md (M2, #6).
+- Fix: the first Colab run stopped on a PU file that scipy cannot read ("Expecting matrix
+  here"). pdm-bench's own loader skips unreadable files, so the Phase 1 baselines never saw it;
+  `lsbfd.adapt` now skips them the same way, prints their names, and records the number of
+  recordings loaded in each run's config.
+- Validation stage started on Colab: one file skipped (`N15_M01_F10_KA08_2.mat`, 2,239 of 2,240
+  loaded); ERM on the validation bearings scored macro-F1 0.294 (20 epochs, ~50 min on a T4).
+  Test runs cut to 20 epochs (from 50) to fit Colab; ERM in the same trainer stays the control.
+- Colab compute units ran out after 2 of 8 validation runs (ERM 0.294, DANN within-class
+  λ=0.1 0.308 on the validation bearings). To finish the full plan on Kaggle's free GPU, the
+  vibration cache is now one file per bearing, and `scripts/prepare_pu_cache.sh` builds it one
+  bearing at a time (download, checksum, cache, delete), so the raw dataset never has to fit
+  on disk. Runs read only the cache, and the leakage check falls back to the committed
+  manifest when raw files are absent.
+- Validation grid complete (runs 3–8 on Kaggle). Chosen: DANN within-class λ=1 (val 0.527 vs
+  ERM 0.294), SimCLR (0.283), UDA DANN λ=0.1 (0.309). Table in
+  [results/adaptation.md](../results/adaptation.md). Next: test seeds 41–43.
+
+## 2026-10-18
+- Test seed 41 (Kaggle): ERM 0.435, DANN within-class λ=1 0.333, SimCLR 0.378. ERM matches the
+  Phase 1 CNN; neither adaptation method beats ERM, and none approaches LR (0.508). The
+  validation winner did not hold on the test bearings. Next: seeds 42 and 43.
+
+## 2026-10-19
+- Test seeds 42–43 done. Means over seeds 41–43: ERM 0.404 ± 0.027, SimCLR 0.408 ± 0.034,
+  DANN within-class λ=1 0.348 ± 0.013. Nothing approaches LR (0.508); SimCLR equals ERM; DANN
+  is worse; the validation-chosen setting did not transfer. Written up in
+  [results/adaptation.md](../results/adaptation.md). Next: optional UDA seeds, then M2 tag.
+
+## 2026-11-15
+- Phase 3 started, because Phase 2's objective changes (DANN, SimCLR) did not beat LR.
+  Implemented methods borrowed from neighbouring problems: physics-informed envelope-order
+  features at the 6203 fault frequencies (LR and boosted trees), an envelope-spectrum CNN, and
+  test-time BatchNorm adaptation (AdaBN) for both the envelope CNN and the raw CNN. Added
+  rotated held-out folds (one real-damage bearing per class) so a win cannot rest on the four
+  benchmark bearings alone. Protocol and judging rule fixed before any result in
+  [results/novel.md](../results/novel.md). Smoke-tested on synthetic signals; PU runs on Kaggle.
+
+## 2026-11-16
+- Phase 3 run in the cloud (PU downloaded and checksum-verified there). Boosted trees on
+  envelope-order features: 0.528 ± 0.100 macro-F1 over 10 held-out bearing sets vs 0.355 for
+  LR on the generic features (9 of 10 folds better, p = 0.004); the features alone account for
+  +0.147. On the benchmark's 4 bearings: 0.490, just below pdm-bench LR 0.508. Envelope CNN
+  0.318; AdaBN per bearing lifts it to 0.393. Written up in
+  [results/novel.md](../results/novel.md).
+- Phase 3b: boosted trees with settings chosen by leave-bearings-out CV inside the training
+  bearings: 0.524 ± 0.100 (vs 0.528 fixed), so tuning adds nothing and the envelope-feature
+  gain (+0.142 vs tuned generic, p = 0.010) is robust to the settings.
+- Phase 4 (exploratory, after a data audit): found a non-bearing spike train (100 Hz at
+  1500 rpm, 52.5 Hz at 900 rpm) in most healthy and artificial-damage bearings, and confirmed
+  from Lessmeier et al. (2016) that KB23/KB24 are inner-ring dominant. Training on healthy +
+  real-damage bearings only, with despiked envelope features: 0.590 on the benchmark split
+  (above pdm-bench LR 0.508) and 0.570 ± 0.091 over 10 folds. 3-class labels: 0.756. See
+  [results/explore.md](../results/explore.md).
+
+## 2026-11-18
+- Submission clean-up. README rewritten for readers outside the project: the leakage problem,
+  the PU dataset explained from the bearing physics up, the leakage-safety rules, the
+  architectures that matter (LR baseline, 1D CNN, DANN, SimCLR, envelope-order features with
+  boosted trees, envelope CNN with AdaBN), headline results with their status (core vs
+  exploratory) and how to reproduce each phase. Kaggle notes for Phases 2–4 in
+  [kaggle.md](kaggle.md). No code or result changed.

@@ -21,7 +21,9 @@ def collect(base: Path) -> pd.DataFrame:
         cfg = json.loads(cfg_path.read_text()) if cfg_path.exists() else {}
         metrics = json.loads(summary.read_text())["metrics"]
         rel = run_dir.relative_to(base)
-        variant = rel.parts[0] if rel.parts[0] in {"vib", "leaky"} else "as_released"
+        variant = cfg.get("variant") or (
+            rel.parts[0] if rel.parts[0] in {"vib", "leaky"} else "as_released"
+        )
         rows.append(
             {
                 "variant": variant,
