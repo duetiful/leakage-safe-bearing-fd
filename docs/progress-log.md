@@ -140,3 +140,11 @@ One dated entry per working session: what was done, results, next step.
   real-damage bearings only, with despiked envelope features: 0.590 on the benchmark split
   (above pdm-bench LR 0.508) and 0.570 ± 0.091 over 10 folds. 3-class labels: 0.756. See
   [results/explore.md](../results/explore.md).
+
+## 2026-11-18
+- Submission clean-up. README rewritten for readers outside the project: the leakage problem,
+  the PU dataset explained from the bearing physics up, the leakage-safety rules, the
+  architectures that matter (LR baseline, 1D CNN, DANN, SimCLR, envelope-order features with
+  boosted trees, envelope CNN with AdaBN), headline results with their status (core vs
+  exploratory) and how to reproduce each phase. Kaggle notes for Phases 2–4 in
+  [kaggle.md](kaggle.md). No code or result changed.
