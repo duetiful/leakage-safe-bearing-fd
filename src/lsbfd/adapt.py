@@ -283,6 +283,31 @@ def predict(model: Net, ws: WindowSet, amp: bool, bs: int = 256) -> np.ndarray:
     return torch.cat(out).numpy()
 
 
+@torch.no_grad()
+def adabn_predict(model: Net, ws: WindowSet, groups: list[np.ndarray], amp: bool,
+                  bs: int = 256) -> np.ndarray:
+    """AdaBN (Li et al., 2016): re-estimate every BatchNorm's statistics on the unlabeled
+    windows of each group, then predict that group. Test-time adaptation (transductive)."""
+    import copy
+
+    pred = np.empty(len(ws), dtype=np.int64)
+    for g in groups:
+        m = copy.deepcopy(model)
+        for bn in (x for x in m.modules() if isinstance(x, nn.BatchNorm1d)):
+            bn.reset_running_stats()
+            bn.momentum = None  # cumulative average
+        m.train()
+        gi = torch.from_numpy(g).to(ws.starts.device)
+        for i in range(0, len(gi), bs):
+            with torch.autocast(ws.data.device.type, enabled=amp):
+                m.embed(ws.x(gi[i:i + bs]))
+        m.eval()
+        for i in range(0, len(gi), bs):
+            with torch.autocast(ws.data.device.type, enabled=amp):
+                pred[g[i:i + bs]] = m(ws.x(gi[i:i + bs])).argmax(1).cpu().numpy()
+    return pred
+
+
 def pretrain_simclr(model: Net, pool: WindowSet, a, gen, amp: bool, log) -> None:
     """Labels and domains of the pool are never read: only its windows."""
     params = list(model.features.parameters()) + list(model.proj.parameters())
@@ -370,7 +395,7 @@ def tag_of(a) -> str:
         return f"dann-{a.domain}-lam{a.lam:g}"
     if a.method == "simclr":
         return f"simclr{'-tgt' if a.pretrain_target else ''}-pre{a.pretrain_epochs}"
-    return "erm"
+    return "erm-adabn" if a.adabn else "erm"
 
 
 def git_sha() -> str:
@@ -461,6 +486,20 @@ def run(a) -> dict:
         "per_bearing_accuracy": per_bearing,
         "confusion_matrix": confusion_matrix(true, pred, labels=labels).tolist(),
     }
+    if a.adabn:  # same trained model, scored again after test-time BN adaptation
+        def score(p):
+            return {"macro_f1": float(f1_score(true, p, average="macro", labels=labels,
+                                               zero_division=0)),
+                    "balanced_accuracy": float(balanced_accuracy_score(true, p)),
+                    "per_bearing_accuracy": {b: float(accuracy_score(true[tgt_eval.bearing == b],
+                                                                     p[tgt_eval.bearing == b]))
+                                             for b in scored_b}}
+        metrics["adabn_pooled"] = score(adabn_predict(
+            model, tgt_eval, [np.arange(len(tgt_eval))], amp))
+        metrics["adabn_per_bearing"] = score(adabn_predict(
+            model, tgt_eval, [np.flatnonzero(tgt_eval.bearing == b) for b in scored_b], amp))
+        print(f"[{tag}] AdaBN pooled {metrics['adabn_pooled']['macro_f1']:.4f}, per bearing "
+              f"{metrics['adabn_per_bearing']['macro_f1']:.4f}", flush=True)
     out = {"model": tag, "split": a.stage, "seed": a.seed, "metrics": metrics,
            "seconds": round(time.time() - t0, 1)}
     (run_dir / "history.json").write_text(json.dumps(history, indent=1))
@@ -492,6 +531,8 @@ def parse(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--workspace", default=str(ROOT / "data" / "raw"))
     p.add_argument("--cache", default=str(ROOT / "data" / "processed"))
     p.add_argument("--out", default=str(ROOT / "runs" / "phase2"))
+    p.add_argument("--adabn", action="store_true",
+                   help="erm only: also score with test-time BN adaptation (tag erm-adabn)")
     p.add_argument("--synthetic", action="store_true", help="fake signals, for smoke tests")
     p.add_argument("--force", action="store_true")
     return p.parse_args(argv)

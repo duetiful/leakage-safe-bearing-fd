@@ -114,3 +114,29 @@ One dated entry per working session: what was done, results, next step.
   DANN within-class λ=1 0.348 ± 0.013. Nothing approaches LR (0.508); SimCLR equals ERM; DANN
   is worse; the validation-chosen setting did not transfer. Written up in
   [results/adaptation.md](../results/adaptation.md). Next: optional UDA seeds, then M2 tag.
+
+## 2026-11-15
+- Phase 3 started, because Phase 2's objective changes (DANN, SimCLR) did not beat LR.
+  Implemented methods borrowed from neighbouring problems: physics-informed envelope-order
+  features at the 6203 fault frequencies (LR and boosted trees), an envelope-spectrum CNN, and
+  test-time BatchNorm adaptation (AdaBN) for both the envelope CNN and the raw CNN. Added
+  rotated held-out folds (one real-damage bearing per class) so a win cannot rest on the four
+  benchmark bearings alone. Protocol and judging rule fixed before any result in
+  [results/novel.md](../results/novel.md). Smoke-tested on synthetic signals; PU runs on Kaggle.
+
+## 2026-11-16
+- Phase 3 run in the cloud (PU downloaded and checksum-verified there). Boosted trees on
+  envelope-order features: 0.528 ± 0.100 macro-F1 over 10 held-out bearing sets vs 0.355 for
+  LR on the generic features (9 of 10 folds better, p = 0.004); the features alone account for
+  +0.147. On the benchmark's 4 bearings: 0.490, just below pdm-bench LR 0.508. Envelope CNN
+  0.318; AdaBN per bearing lifts it to 0.393. Written up in
+  [results/novel.md](../results/novel.md).
+- Phase 3b: boosted trees with settings chosen by leave-bearings-out CV inside the training
+  bearings: 0.524 ± 0.100 (vs 0.528 fixed), so tuning adds nothing and the envelope-feature
+  gain (+0.142 vs tuned generic, p = 0.010) is robust to the settings.
+- Phase 4 (exploratory, after a data audit): found a non-bearing spike train (100 Hz at
+  1500 rpm, 52.5 Hz at 900 rpm) in most healthy and artificial-damage bearings, and confirmed
+  from Lessmeier et al. (2016) that KB23/KB24 are inner-ring dominant. Training on healthy +
+  real-damage bearings only, with despiked envelope features: 0.590 on the benchmark split
+  (above pdm-bench LR 0.508) and 0.570 ± 0.091 over 10 folds. 3-class labels: 0.756. See
+  [results/explore.md](../results/explore.md).
