@@ -1,6 +1,6 @@
 # Phase 2: Domain adaptation on PU Cross-Bearing Instance (vibration only)
 
-Status: **DG results complete (3 seeds); optional UDA test runs pending.** This file fixes the protocol before any result
+Status: **complete. DG results on 3 seeds; the optional UDA variant was not run on the test bearings (see Limitations).** This file fixes the protocol before any result
 is seen, so the selection cannot be tuned to the test bearings afterwards.
 
 ## Bars to beat (from [reproduction.md](reproduction.md), vibration-only)
@@ -114,4 +114,4 @@ standard deviation over the three seeds.
 - One scenario (PU Cross-Bearing Instance) with one test bearing per class, so per-class F1 is
   effectively per-bearing.
 - One file (`N15_M01_F10_KA08_2.mat`) is unreadable and skipped, as in pdm-bench.
-- The UDA variant (source-vs-target DANN, λ=0.1) has not been run on the test bearings yet.
+- The UDA variant (source-vs-target DANN, λ=0.1) was not run on the test bearings, so no UDA test result is reported.
