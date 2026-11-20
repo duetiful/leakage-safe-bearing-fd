@@ -1,0 +1,21 @@
+{
+ "cards": [
+  [
+   "1. Too few domains, and they are tangled with the label",
+   "28 training bearings, 2 to 11 per class. Bearing identity nearly decides the class, so forcing the features to forget the bearing also blurs the fault: DANN 0.348 vs its own control 0.404."
+  ],
+  [
+   "2. A big model finds shortcuts",
+   "The CNN scores 0.999 on seen bearings, so it can memorise bearing-specific cues (its resonances, or recording artefacts such as the 100 Hz spike train). LR on 11 statistics, or shallow trees on 85 features, has far less room to memorise a bearing."
+  ],
+  [
+   "3. Model choice cannot see the target",
+   "With 4 validation bearings, the DANN setting that led validation by 0.23 (0.527) was the worst on test (0.348). The adversary's strength is tuned blind."
+  ],
+  [
+   "4. The invariance is already known physics",
+   "Fault orders (3.05\u00d7 and 4.95\u00d7 shaft speed) are the same on every 6203 bearing. Putting them in the input gives invariance by construction, instead of asking an adversary to learn it from 28 examples."
+  ]
+ ],
+ "footer": "Not unusual: in DomainBed, well-tuned plain training (ERM) matched or beat DANN and other domain-generalisation methods (Gulrajani & Lopez-Paz, ICLR 2021), and the benchmark itself found LR > CNN on this scenario."
+}
