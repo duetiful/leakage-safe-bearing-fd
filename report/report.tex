@@ -62,8 +62,8 @@ is tested on a bearing it has already seen.
 
 Knap et~al.\ \cite{knap2026} built a leakage-safe benchmark (\textit{pdm-bench}) with six
 cross-domain scenarios on CWRU and Paderborn (PU). On PU Cross-Bearing Instance their best deep
-model reached \mF{} $0.326\pm0.008$ and a logistic regression 0.355. Because this is the
-scenario in which domain adaptation (DA) should help most and helps least, we ask:
+model reached \mF{} $0.326\pm0.008$ and a logistic regression (LR) 0.355. We take this
+scenario as our problem (Sec.~\ref{sec:problem}) and ask:
 \textbf{RQ1} Can these baselines be reproduced?
 \textbf{RQ2} Does DA let a deep model beat the simple baseline under the same protocol?
 \textbf{RQ3} Which single change is responsible for any gain?
@@ -104,16 +104,27 @@ model can therefore succeed by recognizing the bearing rather than the fault, wh
 leakage Vieira et~al.\ \cite{vieira2026} warn about; they also find that PU performance rises with
 the number of distinct training bearings, not with model capacity. Knap et~al.\ \cite{knap2026}
 made splits leakage-safe at the recording level and forbid target data, so every pdm-bench
-scenario is a DG task. Whether DA helps when the bearing itself is new was untested.
+scenario is a DG task.
 
 \section{Problem Definition}\label{sec:problem}
+\noindent\fbox{\parbox{\dimexpr\columnwidth-2\fboxsep-2\fboxrule}{\small
+\textbf{Problem taken on.} Can a fault classifier trained on 28 Paderborn bearings diagnose four
+bearings it has never seen (pdm-bench PU Cross-Bearing Instance), and can domain adaptation make a
+deep model do this better than a logistic regression?\\[2pt]
+\textbf{Why this problem.} (1) \emph{It is where the benchmark exposed a gap.} Deep models win
+five of the six pdm-bench scenarios, but three of those five reuse training bearings; on this
+bearing-safe scenario the best CNN (0.326) loses to LR (0.355). (2) \emph{It is the deployment
+case}: the monitored bearing is never in the training data. (3) \emph{It is where DA should
+help most}: every bearing is its own domain, yet DA had not been tested across bearings under a
+leakage-safe protocol (Sec.~\ref{sec:prior}).}}
+\vspace{2pt}
+
 Table~\ref{tab:tasks} lists the benchmark's six tasks with the factor that changes between
 source and target. Our bearing-level audit (Sec.~\ref{sec:protocol}) adds the last column: no
 recording is shared in any scenario, but CWRU Cross-Load, CWRU Cross-FS and PU Cross-Operating
-Condition test entirely on bearings seen in training. These are the classical cross-condition
-tasks, and they have the highest published scores (Cross-Load: 1.000), so they measure
-robustness to a new load or sampling rate on a \emph{known} bearing. No scenario crosses
-machines.
+Condition test entirely on bearings seen in training. They have the highest published
+scores (Cross-Load: 1.000) but measure robustness to a new load or sampling rate on a
+\emph{known} bearing. No scenario crosses machines.
 
 \begin{table}[t]
 \centering
@@ -152,8 +163,7 @@ leakage-safe cross-condition task must hold out bearings \emph{and} a condition 
 the benchmark does not define and which leaves very few test recordings per class on PU.
 (ii) A cross-machine task (e.g.\ CWRU $\rightarrow$ PU) changes bearing type (6205 vs 6203),
 sensor position, sampling rate and the label set at once, and pdm-bench has no such scenario
-to compare against. (iii) Bearing-instance shift is the one that matters in deployment, where
-the monitored bearing is never in the training data. Both alternatives are listed as future
+to compare against. Both alternatives are listed as future
 work (Sec.~\ref{sec:future}).
 
 \section{Dataset}
