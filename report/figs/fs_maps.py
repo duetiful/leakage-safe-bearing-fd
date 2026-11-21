@@ -29,18 +29,18 @@ title = {"generic": "(a) Generic statistics", "phys_clip4": "(b) Envelope-order,
          "erm": "(c) CNN embedding (ERM)", "dann": "(d) DANN embedding"}
 order = [k for k in title if k in P.files]
 
-fig, axes = plt.subplots(2, 2, figsize=(3.5, 3.7), dpi=300)
+fig, axes = plt.subplots(2, 2, figsize=(3.5, 3.9), dpi=600)
 axes = axes.ravel()
 tr = ~np.isin(bearing, list(TEST))
 for ax, key in zip(axes, order):
     E = P[key]
     for ci, c in enumerate(CLASSES):
         m = tr & (y == ci)
-        ax.scatter(E[m, 0], E[m, 1], s=0.6, c=COL[c], marker=MK[c], alpha=0.30, lw=0,
+        ax.scatter(E[m, 0], E[m, 1], s=1.6, c=COL[c], marker=MK[c], alpha=0.45, lw=0,
                    rasterized=True)
     for b, c in TEST.items():
         m = bearing == b
-        ax.scatter(E[m, 0], E[m, 1], s=4, c=COL[c], marker=MK[c], edgecolors=INK, lw=0.25,
+        ax.scatter(E[m, 0], E[m, 1], s=7, c=COL[c], marker=MK[c], edgecolors=INK, lw=0.3,
                    alpha=0.95, zorder=3, rasterized=True)
     r = rows[key]
     ax.set_title(title[key], fontsize=8.5, color=INK, loc="left", pad=2)
@@ -52,11 +52,12 @@ for ax, key in zip(axes, order):
         sp.set_color(GRID)
 for ax in axes[len(order):]:
     ax.axis("off")
-h = [Line2D([], [], ls="", marker=MK[c], color=COL[c], ms=4, label=NAMES[c]) for c in CLASSES]
+h = [Line2D([], [], ls="", marker=MK[c], color=COL[c], ms=5, label=NAMES[c]) for c in CLASSES]
 h += [Line2D([], [], ls="", marker="o", color="#9AA5B1", mec=INK, mew=0.5, ms=4,
              label="test bearing")]
 fig.legend(handles=h, loc="lower center", ncol=5, frameon=False, fontsize=7,
            handletextpad=0.1, columnspacing=0.6, bbox_to_anchor=(0.5, -0.01))
 fig.tight_layout(h_pad=1.6, w_pad=0.6, rect=(0, 0.04, 1, 1))
-fig.savefig(out / "fs_maps.png", bbox_inches="tight")
+fig.savefig(out / "fs_maps.pdf", bbox_inches="tight", dpi=600)
+fig.savefig(out / "fs_maps.png", bbox_inches="tight", dpi=300)
 print("ok", order, M["projection"])
