@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import subprocess
 import sys
 import time
@@ -108,7 +109,9 @@ class Signals:
 def manifest_bearings() -> list[str]:
     """All PU bearing codes, from the committed download manifest (no data needed)."""
     lines = (ROOT / "data/checksums/pu.sha256").read_text().splitlines()
-    return sorted({line.split()[1].split("/")[-2] for line in lines})
+    # LSBFD_SKIP_BEARINGS="KA08,..." leaves bearings out, e.g. when a mirror lacks one
+    skip = {b for b in os.environ.get("LSBFD_SKIP_BEARINGS", "").split(",") if b}
+    return sorted({line.split()[1].split("/")[-2] for line in lines} - skip)
 
 
 def cache_bearing(root: Path, bearing: str, cache: Path) -> Path:
