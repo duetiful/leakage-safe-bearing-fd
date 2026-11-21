@@ -307,15 +307,15 @@ checksums.
 Fig.~\ref{fig:waterfall} shows every step in the order it was made, on the benchmark split,
 and Table~\ref{tab:steps} gives the same chain over ten folds. The subsections explain each step.
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{figs/waterfall_fold0.png}
-\caption{Chronological flow of the project on the benchmark split (test bearings K001, KA30,
-KI21, KB23). Each bar starts where the previous kept step ended and shows its gain (green) or
-loss (red). Hatched red: methods tried against the vibration-only LR bar (0.508) and dropped.
-The leaky split is shown for contrast only: it tests on seen bearings and is not a valid result.}
+\includegraphics[width=\columnwidth]{figs/steps.png}
+\caption{Chronological flow on the benchmark split (test bearings K001, KA30, KI21, KB23).
+Filled dots: steps kept, joined in the order they were made; hollow: methods tried and dropped;
+squares: published numbers. Right column: difference from the vibration-only LR bar (0.508).
+A bearing-leaky split (not shown, not a valid test) lifts the CNN to 0.999.}
 \label{fig:waterfall}
-\end{figure*}
+\end{figure}
 
 \begin{table}[t]
 \centering
