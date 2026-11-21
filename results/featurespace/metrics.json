@@ -1,0 +1,83 @@
+{
+  "n_points": 10236,
+  "projection": "UMAP",
+  "rows": [
+    {
+      "space": "generic",
+      "title": "Generic statistics (11)",
+      "dim": 11,
+      "points": "all",
+      "silhouette_class": -0.0019292902922146739,
+      "silhouette_bearing_in_class": 0.07023295800548973,
+      "knn_f1_fold0": 0.35242346962811905,
+      "knn_f1_10fold_mean": 0.43214914269997295,
+      "knn_f1_10fold_std": 0.09458074445097865
+    },
+    {
+      "space": "phys",
+      "title": "Envelope-order features (85)",
+      "dim": 85,
+      "points": "all",
+      "silhouette_class": 0.015130700874380785,
+      "silhouette_bearing_in_class": 0.04956090452817122,
+      "knn_f1_fold0": 0.43842627694879127,
+      "knn_f1_10fold_mean": 0.448882079005491,
+      "knn_f1_10fold_std": 0.06546321883000315
+    },
+    {
+      "space": "phys_clip4",
+      "title": "Envelope-order, despiked (85)",
+      "dim": 85,
+      "points": "all",
+      "silhouette_class": 0.022408336033635796,
+      "silhouette_bearing_in_class": 0.04709314806648716,
+      "knn_f1_fold0": 0.4298491763769441,
+      "knn_f1_10fold_mean": 0.4480785519251794,
+      "knn_f1_10fold_std": 0.06453321362255016
+    },
+    {
+      "space": "generic_clip4",
+      "title": "Generic, despiked (11)",
+      "dim": 11,
+      "points": "all",
+      "silhouette_class": 0.0004890991061986767,
+      "silhouette_bearing_in_class": 0.11654908607714776,
+      "knn_f1_fold0": 0.35164887513238374,
+      "knn_f1_10fold_mean": 0.48596249355425447,
+      "knn_f1_10fold_std": 0.10081199632315543
+    },
+    {
+      "space": "phys_clip4_real",
+      "title": "Envelope, despiked, real-damage training (85)",
+      "dim": 85,
+      "points": "real",
+      "silhouette_class": 0.031186120768256095,
+      "silhouette_bearing_in_class": 0.06320719539242592,
+      "knn_f1_fold0": 0.439690678512508,
+      "knn_f1_10fold_mean": 0.4328345090743892,
+      "knn_f1_10fold_std": 0.057319471851232554
+    },
+    {
+      "space": "erm",
+      "title": "CNN embedding (128)",
+      "dim": 128,
+      "points": "all",
+      "silhouette_class": 0.03650915503898066,
+      "silhouette_bearing_in_class": 0.14654248373508882,
+      "knn_f1_fold0": 0.3828393179386539,
+      "knn_f1_10fold_mean": null,
+      "knn_f1_10fold_std": null
+    },
+    {
+      "space": "dann",
+      "title": "DANN embedding (128)",
+      "dim": 128,
+      "points": "all",
+      "silhouette_class": 0.02626715334470244,
+      "silhouette_bearing_in_class": 0.13366679478350557,
+      "knn_f1_fold0": 0.3134246614316604,
+      "knn_f1_10fold_mean": null,
+      "knn_f1_10fold_std": null
+    }
+  ]
+}

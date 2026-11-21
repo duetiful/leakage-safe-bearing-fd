@@ -13,7 +13,6 @@
 \usepackage[hidelinks]{hyperref}
 
 \newcommand{\mF}{macro-F1}
-\newcommand{\FSRESULT}{\input{fs_pending}}
 
 \begin{document}
 
@@ -42,7 +41,9 @@ beat LR, which we explain by the coupling of bearing and label, the lack of targ
 blind model selection; (iv) physics-informed envelope-order features with boosted trees raise
 \mF{} from 0.355 to 0.528 across ten rotated bearing hold-outs (9 of 10 folds better, $p=0.004$);
 and (v) after a data audit, training on healthy and real-damage bearings with despiked input
-reaches 0.590 on the benchmark split and $0.570\pm0.091$ across folds. Protocols and judging
+reaches 0.590 on the benchmark split and $0.570\pm0.091$ across folds; (vi) a feature-space
+analysis shows that the CNN encodes bearing identity three times more than the envelope
+features, and that DANN barely reduces it while making classes less compact. Protocols and judging
 rules were fixed before results were seen; post-hoc steps are labelled as such.
 \end{abstract}
 
@@ -181,53 +182,12 @@ for the outer race, inner race and ball, with ball diameter $d$, pitch diameter 
 angle $\phi$. For the type 6203 bearing used in PU ($n=8$, $d=6.75$\,mm, $D=28.55$\,mm,
 $\phi=0$), BPFO $=3.054f_r$, BPFI $=4.946f_r$ and BSF $=1.997f_r$. Expressed in multiples of
 shaft speed (``orders''), these numbers are the same for every 6203 bearing, which is the
-physical reason a model reading them could transfer to a new bearing (Fig.~\ref{fig:bearing}). In the raw spectrum these low frequencies are buried under shaft, gear and electrical components, and the fault energy sits instead at the kHz resonances that the impacts excite. Envelope analysis band-passes the signal around a resonance and demodulates it, which recovers the impact \emph{rate} \cite{randall2011}. An inner-ring defect also
+physical reason a model reading them could transfer to a new bearing. In the raw spectrum these low frequencies are buried under shaft, gear and electrical components, and the fault energy sits instead at the kHz resonances that the impacts excite. Envelope analysis band-passes the signal around a resonance and demodulates it, which recovers the impact \emph{rate} \cite{randall2011}. An inner-ring defect also
 rotates with the shaft, so its impacts are modulated at $f_r$, creating sidebands at
 BPFI\,$\pm f_r$.
 
 
-\begin{figure}[t]
-\centering
-\resizebox{\columnwidth}{!}{\begin{tikzpicture}[font=\scriptsize, >={Stealth[length=1.5mm]}]
-% bearing cross-section
-\draw[thick, fill=gray!25] (0,0) circle (1.25);
-\draw[thick, fill=white] (0,0) circle (1.0);
-\draw[thick, fill=gray!40] (0,0) circle (0.62);
-\draw[thick, fill=white] (0,0) circle (0.42);
-\fill[gray!60] (0,0) circle (0.25);
-\foreach \a in {0,45,...,315} \draw[fill=blue!25] (\a:0.81) circle (0.17);
-\fill[red] (100:1.02) circle (0.05);
-\draw[->] (100:1.02) -- ++(-0.15,0.55) node[above, align=center] {outer-race\\defect};
-\node at (0,0) {\tiny shaft};
-\draw[->] (1.15,-1.35) -- (0.62,-0.62);
-\node[below] at (1.2,-1.3) {ball ($n=8$)};
-\draw[->] (-1.55,-0.75) -- (-1.15,-0.5); \node[left] at (-1.5,-0.8) {outer ring};
-\draw[->] (-1.55,0.15) -- (-0.55,0.1); \node[left] at (-1.5,0.15) {inner ring};
-% signal chain
-\begin{scope}[xshift=2.3cm, yshift=0.75cm]
-\node[anchor=west] at (0,0.35) {(a) raw vibration: impacts excite resonance};
-\draw[->, gray] (0,0) -- (3.9,0);
-\foreach \t in {0.3,1.2,2.1,3.0} {
-  \draw[blue!70!black, domain=0:0.75, samples=60, smooth]
-    plot ({\t+\x}, {0.28*exp(-6*\x)*sin(2000*\x)});
-}
-\draw[<->] (0.3,-0.3) -- node[below] {$1/\mathrm{BPFO}$} (1.2,-0.3);
-\node[anchor=west] at (0,-0.85) {(b) envelope spectrum (orders): peaks at BPFO};
-\draw[->, gray] (0,-1.65) -- (3.9,-1.65) node[right] {$f/f_r$};
-\foreach \o/\h in {1/0.12,3.054/0.55,6.108/0.38,9.162/0.25} {
-  \draw[very thick, red!70!black] ({0.35*\o},-1.65) -- ++(0,\h);
-}
-\node[below] at (0.35*3.054,-1.65) {3.05};
-\node[below] at (0.35*6.108,-1.65) {6.11};
-\node[below] at (0.35,-1.65) {1};
-\end{scope}
-\end{tikzpicture}}
-\caption{Left: a deep-groove ball bearing (type 6203 in PU). Right: each time a ball passes a
-defect it causes an impact that rings the housing's resonance (a); demodulating the signal and
-taking its spectrum on an order axis reveals peaks at the fault order and its harmonics (b),
-here BPFO $=3.054$ orders, which is the same for every 6203 bearing.}
-\label{fig:bearing}
-\end{figure}
+
 
 \subsection{The Paderborn (PU) dataset}
 
@@ -334,18 +294,14 @@ fixes: \emph{despiking}, which clips each window at 4 robust standard deviations
 \emph{real-damage-only training}, which drops the 12 artificially damaged bearings so that the
 16 remaining training bearings (healthy and real damage) match the test bearings' damage origin.
 
-\subsection{Envelope CNN with AdaBN}
-To test whether a deep model could learn on the same physical input, a CNN (Conv1d 32/64/64 with
-kernels 7/5/3, BatchNorm, max-pooling, adaptive pooling to 16 cells, Linear(1024,64)--Linear(64,4))
-reads the full $5\times395$ log envelope-order spectrum. At test time, AdaBN
-\cite{li2016adabn} re-estimates BatchNorm statistics on each unseen bearing's unlabeled windows;
-since this reads test data it is test-time adaptation, not domain generalization.
+\textbf{Envelope CNN with AdaBN.} A small CNN (Conv1d 32/64/64) reads the full $5\times395$ log
+envelope-order spectrum; AdaBN \cite{li2016adabn} optionally re-estimates its BatchNorm statistics
+on each unseen bearing (test-time adaptation, not DG).
 
 
-\textbf{Implementation.} PyTorch and scikit-learn; pdm-bench is a pinned dependency (commit
-\texttt{ca52408}, 278 tests pass), so baselines run on the authors' loaders and splits. All 2,560
-PU and 161 CWRU files are checked against SHA-256 checksums; one unreadable PU file is skipped, as
-in pdm-bench. CNNs ran on free Colab/Kaggle GPUs, feature models on a CPU.
+\textbf{Implementation.} pdm-bench is a pinned dependency (commit \texttt{ca52408}), so
+baselines run on the authors' loaders; all PU and CWRU files are checked against SHA-256
+checksums.
 
 \section{Results}
 Fig.~\ref{fig:waterfall} shows every step in the order it was made, on the benchmark split,
@@ -385,39 +341,21 @@ Ph. & Change (one at a time) & 10 folds & $\Delta$ & Fold 0 & Better, $p$ \\
 \end{table}
 
 \subsection{Reproduction and the cost of leakage (RQ1)}\label{sec:repro}
-Table~\ref{tab:repro} gives the reproduction on the benchmark split. The CNN reproduces within
-its seed spread ($0.315\pm0.032$ vs $0.326\pm0.008$); LR scores 0.388 against 0.355 with identical
-code and seed, and still beats every CNN seed. Our CNN seed spread is four times the paper's,
-so any claimed gain below $\approx$0.03 is noise.
-
-\begin{table}[t]
-\centering
-\caption{Baselines on PU Cross-Bearing Instance (\mF{}, fold 0)}
-\label{tab:repro}
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{lcc}
-\toprule
-Setting & LR & 1D CNN (3 seeds) \\
-\midrule
-Paper \cite{knap2026} & 0.355 & $0.326\pm0.008$ \\
-Ours, as released (2 currents + vibration) & 0.388 & $0.315\pm0.032$ \\
-Ours, vibration only & \textbf{0.508} & $0.436\pm0.023$ \\
-Ours, \emph{leaky} (test bearings seen in training) & 0.841 & 0.999$^\dagger$ \\
-\bottomrule
-\multicolumn{3}{l}{\footnotesize $^\dagger$seed 41 only.}
-\end{tabular}
-\end{table}
+On the benchmark split (Fig.~\ref{fig:waterfall}, Phase 1) the CNN reproduces within its seed
+spread ($0.315\pm0.032$ vs $0.326\pm0.008$); LR scores 0.388 against 0.355 with identical code
+and seed, and still beats every CNN seed. Our CNN seed spread is four times the paper's, so any
+gain below $\approx$0.03 is noise.
 
 Two audit findings change the picture. First, the released PU loader keeps every channel of the
-64\,kHz raster, so all models see two motor currents plus vibration, which the paper does not state. Using vibration only, as
-the paper describes, raises \emph{both} baselines by 0.12; the currents appear to carry
-rig- or bearing-specific cues that do not transfer. Second, with a bearing-leaky split (every
-bearing in training, test on unseen recordings of them), LR reaches 0.841 and the CNN 0.999.
-Leakage turns the CNN from the loser into a near-perfect winner, so a leaky protocol would have
-reversed the benchmark's conclusion. The bar for the rest of the project is vibration-only LR,
-0.508.
+64\,kHz raster, so all models see two motor currents plus vibration, which the paper does not
+state. Using vibration only raises \emph{both} baselines by 0.12 (LR 0.508, CNN
+$0.436\pm0.023$); the currents appear to carry rig- or bearing-specific cues that do not
+transfer. Second, with a bearing-leaky split (every bearing in training, test on unseen
+recordings of them), LR reaches 0.841 and the CNN 0.999 (seed 41). Leakage turns the CNN from
+the loser into a near-perfect winner, so a leaky protocol would have reversed the benchmark's
+conclusion. The bar for the rest of the project is vibration-only LR, 0.508.
 
-\subsection{Domain adaptation does not help (RQ2)}
+\subsection{Domain adaptation does not help (RQ2)}\label{sec:da}
 On the four source validation bearings, the within-class DANN at $\lambda=1$ led ERM by 0.23
 (0.527 vs 0.294) and was selected. On the test bearings (3 seeds, 20 epochs to fit free GPU
 time, so ERM from the same trainer is the control), ERM scores $0.404\pm0.027$, SimCLR
@@ -441,7 +379,8 @@ bearing lies inside their span. Classic source-versus-target DANN (UDA, which th
 forbids) did not help either on our validation bearings (0.309 and 0.200 vs ERM 0.294).
 (3) \emph{Capacity enables shortcuts.} The same CNN scores 0.999 when test bearings are seen in
 training, so it can memorize bearing-specific cues (resonances, the spike artifact of
-Sec.~\ref{sec:audit}). LR on 11 summary statistics has little room to memorize a bearing.
+Sec.~\ref{sec:audit}); its embedding carries three times the bearing identity of the envelope
+features (Sec.~\ref{sec:fs}). LR on 11 summary statistics has little room to memorize a bearing.
 (4) \emph{Model selection is blind.} The DANN setting that led source validation by 0.23 was the
 worst on test. This pattern is not unique to us: in DomainBed \cite{gulrajani2021}, carefully
 tuned ERM matched or beat DANN and most DG methods, and pdm-bench itself found LR above the CNN on
@@ -466,37 +405,16 @@ trees by leave-bearings-out cross-validation inside the training bearings change
 
 
 
-The gain appears where the physics predicts (Fig.~\ref{fig:class}). Outer-ring F1 rises from
-0.12 to 0.56 and inner-ring F1 from 0.24 to 0.56; these classes each have one characteristic
+The gain appears where the physics predicts: averaged over the ten folds, outer-ring F1 rises from
+0.12 to 0.56 and inner-ring F1 from 0.24 to 0.56 (LR/generic to trees/envelope); these classes each have one characteristic
 frequency. The multiple-damage class, a mixture of both signatures, does not improve.
 
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}
-\begin{axis}[
-  ybar, width=\columnwidth, height=4.0cm, bar width=7pt,
-  ymin=0, ymax=1.0, ylabel={F1 (mean of 10 folds)}, ylabel style={font=\scriptsize},
-  symbolic x coords={Healthy,Inner ring,Multiple,Outer ring},
-  xtick=data, tick label style={font=\scriptsize},
-  legend style={font=\scriptsize, at={(0.5,1.03)}, anchor=south, legend columns=3, draw=none},
-  enlarge x limits=0.18, ymajorgrids, grid style={gray!25}]
-\addplot[fill=gray!50, draw=gray!70] coordinates {(Healthy,0.75) (Inner ring,0.24) (Multiple,0.31) (Outer ring,0.12)};
-\addplot[fill=blue!30, draw=blue!60] coordinates {(Healthy,0.68) (Inner ring,0.44) (Multiple,0.23) (Outer ring,0.18)};
-\addplot[fill=green!50!black!60, draw=green!40!black] coordinates {(Healthy,0.81) (Inner ring,0.56) (Multiple,0.18) (Outer ring,0.56)};
-\legend{LR / generic, Trees / generic, Trees / envelope}
-\end{axis}
-\end{tikzpicture}
-\caption{Per-class F1 across ten folds. Envelope-order features help most for the outer and
-inner ring, the classes with a single characteristic fault frequency.}
-\label{fig:class}
-\end{figure}
+
 
 On fold 0 alone, the trees score 0.490, just below the 0.508 bar, so the strict pre-registered
-criterion is \emph{not} met in Phase 3. Fold 0 is fragile: our own LR on the same features moves
-between 0.36 and 0.47 just by changing its regularization or class weighting, and fold-0
-rankings differ from 10-fold rankings. We therefore treat the 10-fold result as the main
-evidence. The envelope CNN, given the same physical input, overfits the 28 training bearings
-(0.318); AdaBN per test bearing lifts it consistently to 0.393 (all seeds), but it stays below
+criterion is \emph{not} met in Phase 3. Fold 0 is fragile (LR on the same features moves
+between 0.36 and 0.47 with its regularization), so the 10-fold result is the main evidence.
+The envelope CNN overfits the training bearings (0.318); AdaBN lifts it to 0.393, still below
 the feature models.
 
 \subsection{Data audit and curated training (exploratory)}\label{sec:audit}
@@ -520,9 +438,8 @@ the data after Phase 3, we report them as exploratory, not as a pre-registered r
 
 The audit also showed that the dataset authors \cite{lessmeier2016} label KB23 and KB24 as
 inner-ring dominant and KB27 as outer-ring dominant, and use three classes. Under those labels
-the same model reaches $0.756\pm0.129$ versus $0.501$ for the generic LR; the 4-class
-``multiple'' class (KB27 is never recognized by any model) is close to unlearnable across
-bearings.
+the same model reaches $0.756\pm0.129$ (generic LR 0.501); the 4-class ``multiple'' class is
+close to unlearnable across bearings.
 
 
 
@@ -530,27 +447,71 @@ bearings.
 \subsection{Feature-space analysis}\label{sec:fs}
 A good cross-bearing representation should make the four classes compact and separated while
 \emph{not} separating individual bearings of the same class. We designed three measures, all
-computed in the full-dimensional space on the same 10{,}200 windows (4 per recording, all 32
+computed in the full-dimensional space on the same 10{,}236 windows (4 per recording, all 32
 bearings), standardized with training-bearing statistics only: the \emph{class silhouette}
 (higher is better), the \emph{within-class bearing silhouette} (lower is better: bearing identity
 left in the features), and the \emph{kNN-transfer \mF{}}, a 15-nearest-neighbour vote from
 training windows to held-out-bearing windows. They are applied to the generic statistics, the
 envelope-order features (raw and despiked, all and real-damage bearings), and the 128-d
-embeddings of the ERM CNN and the within-class DANN. \FSRESULT
+embeddings of the ERM CNN and the within-class DANN. 2-D maps are UMAP projections fitted
+without labels (Fig.~\ref{fig:fs}); every number in Table~\ref{tab:fs} is computed before
+projection.
 
-\section{Discussion}
-\textbf{Honest overview of the field.} Three lessons follow: (1) a split that shares a
-physical bearing measures memorization of it (0.999 vs 0.436); (2) single four-bearing splits
-can rank methods differently from multi-fold evaluation; (3) input channels, class definitions
-and damage origin can matter more than architecture.
+\begin{table}[t]
+\centering
+\caption{Feature-space compactness and transfer (10{,}236 windows, all 32 bearings)}
+\label{tab:fs}
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\columnwidth}{!}{\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{Silhouette} & \multicolumn{2}{c}{kNN-transfer \mF{}} \\
+Representation (dim.) & class $\uparrow$ & bearing $\downarrow$ & fold 0 & 10 folds \\
+\midrule
+Generic statistics (11) & $-0.002$ & 0.070 & 0.352 & $0.432\pm0.095$ \\
+\quad despiked & $0.000$ & 0.117 & 0.352 & $\mathbf{0.486\pm0.101}$ \\
+Envelope-order (85) & $0.015$ & 0.050 & 0.438 & $0.449\pm0.065$ \\
+\quad despiked & $0.022$ & \textbf{0.047} & 0.430 & $0.448\pm0.065$ \\
+\quad despiked, real-damage only & $0.031$ & 0.063 & \textbf{0.440} & $0.433\pm0.057$ \\
+CNN embedding, ERM (128)$^\ast$ & $\mathbf{0.037}$ & 0.147 & 0.383 & -- \\
+DANN embedding (128)$^\ast$ & $0.026$ & 0.134 & 0.313 & -- \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize $^\ast$Reduced CPU retrain, one seed; own fold-0 \mF{}: ERM 0.464, DANN 0.410.}
+\end{tabular}}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/fs_maps.png}
+\caption{UMAP maps of the same windows in four representations. Small points: training
+bearings; outlined: the four unseen test bearings. Under each map: class and within-class
+bearing silhouettes. The CNN and DANN spaces break into one island per bearing.}
+\label{fig:fs}
+\end{figure}
+
+Three findings stand out. (1) \emph{No representation forms compact classes}: every class
+silhouette lies between $-0.002$ and 0.037, so the four classes overlap heavily in all spaces,
+which is consistent with the modest \mF{} of every model. (2) \emph{The CNN encodes bearing
+identity.} Its within-class bearing silhouette (0.147) is three times that of the envelope
+features (0.047), and its map splits into one island per bearing (Fig.~\ref{fig:fs}c): the
+feature-space picture of the memorization behind the 0.999 leaky score. DANN lowers this only
+slightly (0.134) while also lowering class compactness (0.037 $\rightarrow$ 0.026) and kNN
+transfer (0.383 $\rightarrow$ 0.313); its own \mF{} falls from 0.464 to 0.410, the same direction
+as the three-seed result of Sec.~\ref{sec:da}. (3) \emph{Each feature-side step helps a
+little.} Envelope features carry the least bearing identity and place unseen bearings among
+training windows of their own class more often on fold 0 (0.43--0.44 vs 0.35); despiking and
+real-damage training raise class compactness step by step (0.015 $\rightarrow$ 0.022
+$\rightarrow$ 0.031). One result does not fit a simple story: over ten folds, kNN on despiked
+\emph{generic} statistics transfers best (0.486), so the trees' gain in Table~\ref{tab:steps}
+comes from selecting a few fault-order dimensions, not from the whole space becoming more
+compact. The CNN and DANN embeddings come from a reduced CPU retrain (8 epochs, a quarter of
+the training windows), as the Phase 2 checkpoints were not kept.
 
 \section{Limitations}
 All results are on one dataset (PU) and one scenario; CWRU was used only for the leakage audit.
 Feature models are deterministic, so the fold spread ($\approx$0.10) is the uncertainty, and the
 rotated folds share bearings (only three KB bearings exist), so $p$-values are indicative. Phase 2
-used 20 rather than 50 epochs and three seeds. The final curation step is post hoc. Shaft speed is
-taken from nominal values, and the 0.128\,s window limits envelope resolution to 7.8\,Hz
-(0.3--0.5 orders), which blurs BPFO and BPFI.
+used 20 rather than 50 epochs and three seeds. The final curation step is post hoc. The 0.128\,s window limits envelope resolution to
+0.3--0.5 orders. The CNN/DANN embeddings of Sec.~\ref{sec:fs} come from a single reduced retrain.
 
 \section{Future Prospects}\label{sec:future}
 (1) \emph{Leakage-safe cross-condition and cross-machine tasks}: hold out bearings \emph{and} an
