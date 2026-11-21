@@ -36,12 +36,13 @@ training, while its Paderborn (PU) Cross-Bearing Instance scenario, where a logi
 (LR, \mF{} 0.355) beats the best deep model (0.326), is a true domain-generalization task with
 each bearing as a domain. On that task we find, step by step, that (i) the benchmark's models
 silently use motor-current channels, and vibration-only input raises both baselines by 0.12;
-(ii) a bearing-leaky split lifts the 1D CNN from 0.315 to 0.999; (iii) DANN and SimCLR do not
+(ii) a bearing-leaky split lifts the released 1D CNN from 0.315 to 0.999; (iii) DANN and SimCLR do not
 beat LR, which we explain by the coupling of bearing and label, the lack of target data and
 blind model selection; (iv) physics-informed envelope-order features with boosted trees raise
-\mF{} from 0.355 to 0.528 across ten rotated bearing hold-outs (9 of 10 folds better, $p=0.004$);
-and (v) after a data audit, training on healthy and real-damage bearings with despiked input
-reaches 0.590 on the benchmark split and $0.570\pm0.091$ across folds; (vi) a feature-space
+\mF{} across ten rotated bearing hold-outs from 0.355 (an LR on the benchmark's own 11
+statistics) to 0.528 (9 of 10 folds better, $p=0.004$);
+(v) after a data audit, training on healthy and real-damage bearings with despiked input
+reaches 0.590 on the benchmark split and $0.570\pm0.091$ across folds; and (vi) a feature-space
 analysis shows that the CNN encodes bearing identity three times more than the envelope
 features, and that DANN barely reduces it while making classes less compact. Protocols and judging
 rules were fixed before results were seen; post-hoc steps are labelled as such.
@@ -74,7 +75,8 @@ bearing-level leakage audit showing that its cross-condition scenarios reuse tra
 (2) a reproduction with a quantified leaky-versus-safe contrast; (3) a pre-registered negative
 result for DANN and SimCLR, with an analysis of why; (4) physics-informed envelope-order
 features that transfer to unseen bearings on ten rotated hold-outs; and (5) a data audit with a
-training-set curation that improves transfer further. Each step's gain or loss is reported in
+training-set curation that improves transfer further; and (6) a feature-space analysis of
+compactness and bearing identity for every representation. Each step's gain or loss is reported in
 the order it was made (Fig.~\ref{fig:waterfall}).
 
 \section{Domain Shift in Bearing Diagnosis: Prior Work}\label{sec:prior}
@@ -137,13 +139,14 @@ scores (Cross-Load: 1.000) but measure robustness to a new load or sampling rate
 Scenario & Shift & Source $\rightarrow$ target & Test rec. & Shared bearings \\
 \midrule
 CWRU Cross-Load & load & 1797/1772/1750 $\rightarrow$ 1730 rpm & 16 & \textbf{16 of 16} \\
-CWRU Cross-FS & sampling rate & 12 kHz $\rightarrow$ 48 kHz & 52 & \textbf{13 of 13} \\
+CWRU Cross-FS & sampling rate & 12 kHz $\rightarrow$ 48 kHz & 52 & \textbf{13 of 13}$^\dagger$ \\
 CWRU Cross-Fault Inst. & fault size & 0.007/0.014 $\rightarrow$ 0.021 in & 20 & 0 \\
 PU Cross-Op.\ Cond. & speed, load & 3 conditions $\rightarrow$ N09\_M07\_F10 & 640 & \textbf{32 of 32} \\
 PU Cross-Damage Prov. & damage origin & artificial $\rightarrow$ real damage & 960 & 0 \\
 \textbf{PU Cross-Bearing Inst.} & \textbf{bearing} & \textbf{28 bearings $\rightarrow$ 4 new} & 320 & 0 \\
 \bottomrule
-\multicolumn{5}{l}{\footnotesize No recording is shared in any scenario. All tasks are DG: no target data in training.}
+\multicolumn{5}{l}{\footnotesize No recording is shared in any scenario. All tasks are DG: no target data in training.}\\
+\multicolumn{5}{l}{\footnotesize $^\dagger$Assuming CWRU's 12 and 48\,kHz drive-end files come from the same seeded bearings.}
 \end{tabular}}
 \end{table}
 
@@ -220,8 +223,8 @@ a two-sided Wilcoxon signed-rank test over folds.
 
 \textbf{Pre-registration.} Before each phase, its protocol, hyperparameter grid, selection rule
 and judging rule were committed to the repository. A method ``works'' only if it beats the
-baseline on fold 0 by more than the seed spread ($\approx$0.03) \emph{and} beats it across folds
-with $p<0.05$. All hyperparameters are chosen on source bearings only.
+vibration-only LR on fold 0 (0.508) by more than the seed spread ($\approx$0.03) \emph{and} beats
+the reference LR across folds with $p<0.05$. All hyperparameters are chosen on source bearings only.
 
 \section{Methods and Architectures}
 \begin{figure*}[t]
@@ -248,9 +251,13 @@ so they mean the same thing on every 6203 bearing.}
 
 
 \subsection{Baselines}
-\textbf{Logistic regression (LR)} on hand-crafted time- and frequency-domain statistics (RMS,
-kurtosis, crest, shape, clearance and impulse factors, mean frequency, frequency centre, etc.),
-standardized, with Bayesian hyperparameter search, as in pdm-bench.
+\textbf{Logistic regression (LR)} on 11 standardized time- and frequency-domain statistics
+(RMS, kurtosis, crest, shape, clearance and impulse factors, mean frequency, etc.), with
+Bayesian hyperparameter search, as in pdm-bench. Because pdm-bench runs it once on one split, the ten-fold comparisons use a
+\emph{reference LR} on the same 11 statistics inside our own pipeline (balanced class weights,
+$C$ chosen by leave-bearings-out CV on the training bearings). It scores 0.376 on fold 0, below
+pdm-bench's 0.508, and $0.355\pm0.101$ over ten folds; the match with the paper's 0.355 is a
+coincidence.
 
 \textbf{1D CNN} (pdm-bench): three convolution blocks, Conv1d(32, $k$=7) $\rightarrow$
 Conv1d(64, $k$=5) $\rightarrow$ Conv1d(128, $k$=3), each followed by BatchNorm and ReLU, then
@@ -305,7 +312,7 @@ checksums.
 
 \section{Results}
 Fig.~\ref{fig:waterfall} shows every step in the order it was made, on the benchmark split,
-and Table~\ref{tab:steps} gives the same chain over ten folds. The subsections explain each step.
+and Table~\ref{tab:steps} gives the feature-model steps over ten folds. The subsections explain each step.
 
 \begin{figure}[t]
 \centering
@@ -313,7 +320,7 @@ and Table~\ref{tab:steps} gives the same chain over ten folds. The subsections e
 \caption{Chronological flow on the benchmark split (test bearings K001, KA30, KI21, KB23).
 Filled dots: steps kept, joined in the order they were made; hollow: methods tried and dropped;
 squares: published numbers. Right column: difference from the vibration-only LR bar (0.508).
-A bearing-leaky split (not shown, not a valid test) lifts the CNN to 0.999.}
+A bearing-leaky split (not shown, not a valid test) lifts the released CNN to 0.999.}
 \label{fig:waterfall}
 \end{figure}
 
@@ -326,7 +333,7 @@ A bearing-leaky split (not shown, not a valid test) lifts the CNN to 0.999.}
 \toprule
 Ph. & Change (one at a time) & 10 folds & $\Delta$ & Fold 0 & Better, $p$ \\
 \midrule
-3 & LR on generic statistics (reference) & $0.355\pm0.101$ & -- & 0.376 & -- \\
+3 & reference LR, 11 generic statistics & $0.355\pm0.101$ & -- & 0.376 & -- \\
 3 & \quad classifier $\rightarrow$ trees (generic) & $0.381\pm0.093$ & $+0.026$ & 0.336 & 5/10, 0.63 \\
 3 & input $\rightarrow$ envelope-order features (LR) & $0.448\pm0.098$ & $+0.093$ & 0.360 & 8/10, 0.027 \\
 3 & classifier LR $\rightarrow$ boosted trees & $0.528\pm0.100$ & $+0.080$ & 0.490 & 9/10, 0.004 \\
@@ -336,7 +343,8 @@ Ph. & Change (one at a time) & 10 folds & $\Delta$ & Fold 0 & Better, $p$ \\
 3 & envelope CNN (DG, 3 seeds) & -- & & 0.318 & \\
 3 & \quad + AdaBN per test bearing (TTA) & -- & & 0.393 & \\
 \bottomrule
-\multicolumn{6}{l}{\footnotesize Better/$p$: vs.\ LR generic (Wilcoxon). $^\ast$post hoc. $^\dagger$vs.\ trees/envelope on all bearings.}
+\multicolumn{6}{l}{\footnotesize $\Delta$: vs.\ the row it changes. Better/$p$: vs.\ reference LR (Wilcoxon). $^\ast$Post hoc.}\\
+\multicolumn{6}{l}{\footnotesize $^\dagger$vs.\ trees/envelope on all training bearings.}
 \end{tabular}}
 \end{table}
 
@@ -351,14 +359,15 @@ Two audit findings change the picture. First, the released PU loader keeps every
 state. Using vibration only raises \emph{both} baselines by 0.12 (LR 0.508, CNN
 $0.436\pm0.023$); the currents appear to carry rig- or bearing-specific cues that do not
 transfer. Second, with a bearing-leaky split (every bearing in training, test on unseen
-recordings of them), LR reaches 0.841 and the CNN 0.999 (seed 41). Leakage turns the CNN from
+recordings of them) and the as-released input, LR rises from 0.388 to 0.841 and the CNN from
+0.315 to 0.999 (seed 41). Leakage turns the CNN from
 the loser into a near-perfect winner, so a leaky protocol would have reversed the benchmark's
 conclusion. The bar for the rest of the project is vibration-only LR, 0.508.
 
 \subsection{Domain adaptation does not help (RQ2)}\label{sec:da}
 On the four source validation bearings, the within-class DANN at $\lambda=1$ led ERM by 0.23
 (0.527 vs 0.294) and was selected. On the test bearings (3 seeds, 20 epochs to fit free GPU
-time, so ERM from the same trainer is the control), ERM scores $0.404\pm0.027$, SimCLR
+time, so ERM from the same trainer is the control), ERM scores $0.404\pm0.027$ (below the 50-epoch CNN's 0.436), SimCLR
 $0.408\pm0.034$ ($+0.004$) and DANN $0.348\pm0.013$ ($-0.056$), all far below the LR bar of
 0.508 (Fig.~\ref{fig:waterfall}). SimCLR is indistinguishable from ERM, DANN is worse by twice
 the seed spread, and the setting that won source-only validation by 0.23 was the \emph{worst} on
@@ -389,7 +398,7 @@ The lesson is that the invariance DANN tries to \emph{learn} from 28 bearings is
 from physics: fault orders are the same on every 6203 bearing. Phase 3 puts that invariance into
 the input instead.
 
-\textbf{Problems faced.} Beyond the negative result, the deep pipeline met practical obstacles:
+\textbf{Problems faced.} Practical obstacles were:
 undocumented motor-current channels in the loader (Sec.~\ref{sec:repro}); a 20-epoch budget on
 free GPUs (about 50\,min per run); a plain bearing adversary that fought the label, which led
 to the within-class design; and the absence of any target data for UDA under the benchmark's
@@ -400,8 +409,7 @@ Table~\ref{tab:steps} reports all ten folds. Changing only the input from generi
 envelope-order features raises LR by $+0.093$ ($p=0.027$) and boosted trees by $+0.147$
 ($p=0.010$), so the features, not the classifier, carry the gain. The combination reaches
 $0.528\pm0.100$, better than the generic-feature LR on 9 of 10 folds ($p=0.004$). Tuning the
-trees by leave-bearings-out cross-validation inside the training bearings changes nothing
-($0.524$), so the result does not rest on lucky settings.
+trees inside the training bearings changes nothing (0.524).
 
 
 
@@ -475,7 +483,8 @@ Envelope-order (85) & $0.015$ & 0.050 & 0.438 & $0.449\pm0.065$ \\
 CNN embedding, ERM (128)$^\ast$ & $\mathbf{0.037}$ & 0.147 & 0.383 & -- \\
 DANN embedding (128)$^\ast$ & $0.026$ & 0.134 & 0.313 & -- \\
 \bottomrule
-\multicolumn{5}{l}{\footnotesize $^\ast$Reduced CPU retrain, one seed; own fold-0 \mF{}: ERM 0.464, DANN 0.410.}
+\multicolumn{5}{l}{\footnotesize $^\ast$Reduced CPU retrain, one seed; own fold-0 \mF{}: ERM 0.464, DANN 0.410.}\\
+\multicolumn{5}{l}{\footnotesize Real-damage row: silhouettes over healthy + real-damage bearings only.}
 \end{tabular}}
 \end{table}
 
@@ -500,17 +509,17 @@ as the three-seed result of Sec.~\ref{sec:da}. (3) \emph{Each feature-side step 
 little.} Envelope features carry the least bearing identity and place unseen bearings among
 training windows of their own class more often on fold 0 (0.43--0.44 vs 0.35); despiking and
 real-damage training raise class compactness step by step (0.015 $\rightarrow$ 0.022
-$\rightarrow$ 0.031). One result does not fit a simple story: over ten folds, kNN on despiked
+$\rightarrow$ 0.031; the last is measured on healthy and real-damage bearings only). One result does not fit a simple story: over ten folds, kNN on despiked
 \emph{generic} statistics transfers best (0.486), so the trees' gain in Table~\ref{tab:steps}
 comes from selecting a few fault-order dimensions, not from the whole space becoming more
 compact. The CNN and DANN embeddings come from a reduced CPU retrain (8 epochs, a quarter of
 the training windows), as the Phase 2 checkpoints were not kept.
 
 \section{Limitations}
-All results are on one dataset (PU) and one scenario; CWRU was used only for the leakage audit.
+All results are on one dataset (PU) and one scenario.
 Feature models are deterministic, so the fold spread ($\approx$0.10) is the uncertainty, and the
 rotated folds share bearings (only three KB bearings exist), so $p$-values are indicative. Phase 2
-used 20 rather than 50 epochs and three seeds. The final curation step is post hoc. The 0.128\,s window limits envelope resolution to
+used 20 rather than 50 epochs and three seeds. The 0.128\,s window limits envelope resolution to
 0.3--0.5 orders. The CNN/DANN embeddings of Sec.~\ref{sec:fs} come from a single reduced retrain.
 
 \section{Future Prospects}\label{sec:future}
@@ -527,7 +536,7 @@ strongest lever.
 Under a leakage-safe protocol with whole bearings held out, neither a standard 1D CNN nor
 domain-adaptation variants beat a logistic regression on PU, and leaky splits would have hidden
 this. Physics-informed envelope-order features with boosted trees transfer to unseen bearings
-(0.355 $\rightarrow$ 0.528 across ten folds), and curating the training set after a data audit
+(0.355 $\rightarrow$ 0.528 over ten folds against a reference LR), and curating the training set after a data audit
 raises the benchmark score to 0.590. The improvement came from understanding the signal and the
 data, not from a larger network.
 
